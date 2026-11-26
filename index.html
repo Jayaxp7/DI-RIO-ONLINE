@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Organizador de aulas para professores: horário do ano letivo, plano de aula em Word e habilidades da BNCC.">
+<meta name="theme-color" content="#1b8a3a">
+<title>Organizador de Aulas</title>
+<script src="https://cdn.jsdelivr.net/npm/docx@9.16.1/dist/index.iife.js"></script>
+<style>
+:root{--g:#1b8a3a;--g2:#e8f5ec;--tx:#1d2a22;--mu:#6b7a70;--bd:#dfe6e1;--bg:#f5f7f5;--red:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
+header{background:var(--g);color:#fff;padding:14px 16px 12px}
+header .brand{font-weight:700;font-size:18px}
+header .sub{font-size:13px;opacity:.9;margin-top:2px}
+main{max-width:760px;margin:0 auto;padding:14px 14px 90px}
+h2{margin:6px 0 10px;font-size:20px}
+.hint{color:var(--mu);font-size:13px;margin:0 0 12px}
+label.f{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;font:inherit;background:#fff;color:var(--tx)}
+textarea{min-height:80px;resize:vertical}
+.btn{background:var(--g);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:inherit;font-weight:600;cursor:pointer}
+.btn.sec{background:#fff;color:var(--g);border:1px solid var(--g)}
+.btn.red{background:#fff;color:var(--red);border:1px solid var(--red)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.link{background:none;border:0;color:var(--g);font:inherit;font-weight:600;cursor:pointer;padding:6px 0}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.prog{height:6px;background:var(--bd);border-radius:6px;overflow:hidden}
+.prog div{height:100%;background:var(--g)}
+.stepn{font-size:12px;color:var(--mu);margin-top:8px}
+.err{color:var(--red);font-weight:600;font-size:14px;min-height:0}
+.wnav{display:flex;justify-content:space-between;gap:10px;margin-top:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--c,#555);color:#fff;border-radius:20px;padding:3px 10px;font-size:13px;font-weight:600}
+.chip button{background:none;border:0;color:#fff;font-size:16px;cursor:pointer;padding:0}
+.box{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px}
+.tab{flex:1;border:1px solid var(--bd);background:#fff;border-radius:10px;padding:9px 6px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--g);color:#fff;border-color:var(--g)}
+.tab small{opacity:.75;font-weight:500}
+.slotrow{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px;margin-bottom:6px;display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+.slotrow.busy{border-color:var(--g);background:var(--g2)}
+.slotrow input{grid-column:2}
+.st b{display:block;font-size:13px}.st small{color:var(--mu);font-size:12px}
+.srow{display:grid;grid-template-columns:1fr 86px 86px 34px;gap:6px;margin-bottom:6px}
+.x{background:#fff;border:1px solid var(--bd);border-radius:8px;color:var(--red);font-size:18px;cursor:pointer}
+.fer{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--bd);font-size:14px}
+.fer input[type=checkbox]{width:20px;height:20px;flex:none}
+.fer .d{font-weight:700;width:78px;flex:none}
+.fer .n{flex:1}
+.fer.wk{opacity:.5}
+.tag{font-size:11px;background:#eee;border-radius:6px;padding:2px 6px;color:#555}
+nav.tb{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--bd);display:flex;z-index:5}
+nav.tb button{flex:1;background:none;border:0;padding:9px 2px 11px;font:inherit;font-size:12px;color:var(--mu);cursor:pointer}
+nav.tb button b{display:block;font-size:19px;line-height:1.2}
+nav.tb button.on{color:var(--g);font-weight:700}
+.filt{display:flex;gap:8px;margin-bottom:10px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:6px}
+.nav button{background:var(--g2);border:0;border-radius:8px;width:42px;height:38px;font-size:22px;color:var(--g);cursor:pointer}
+.day{margin-top:14px}
+.dh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:capitalize}
+.day.today .dh span:first-child{color:var(--g)}
+.day.today .dh span:first-child::after{content:" • hoje";font-size:12px}
+.badge{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;text-transform:none}
+.badge.fer{background:#fde2e0;color:var(--red)}
+.badge.ext{background:#e3effd;color:#1f5fa8}
+.off{background:#fff;border:1px dashed var(--bd);border-radius:10px;padding:10px;color:var(--mu);font-size:14px}
+.card{background:#fff;border:1px solid var(--bd);border-left:5px solid var(--c);border-radius:10px;padding:9px 10px;margin-bottom:6px;cursor:pointer}
+.card.done{opacity:.7}
+.card.cancel{opacity:.6;background:#f3f3f3}
+.card.cancel .as{text-decoration:line-through}
+.pend{background:#fff4e5;border:1px solid #f6c343;border-radius:12px;padding:8px 10px;margin-bottom:10px;font-size:14px}
+.pend button{background:none;border:0;color:#8a5a00;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:2px 0;text-align:left}
+.ct{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hr{font-weight:700;font-size:13px}
+.comp{font-size:13px;font-weight:600}
+.num{font-size:11px;color:var(--mu);margin-left:auto}
+.ok{color:var(--g);font-weight:800}
+.as{margin-top:5px;font-size:14px}
+.as.vazio{color:var(--g);font-weight:600;font-size:13px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.mh{text-align:center;font-size:12px;font-weight:700;color:var(--mu)}
+.mc{background:#fff;border:1px solid var(--bd);border-radius:8px;min-height:50px;padding:4px;font-size:13px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between}
+.mc.out{opacity:.35}
+.mc.today{border-color:var(--g);border-width:2px}
+.mc.sel{background:var(--g2)}
+.mc.hol{background:#fdecea}
+.mc i{font-style:normal;font-size:11px;font-weight:700;border-radius:10px;padding:1px 6px;align-self:flex-end}
+.mc i.full{background:var(--g);color:#fff}
+.mc i.pend{background:#f6c343;color:#3d3000}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-top:8px}
+.leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;background:var(--lc)}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:14px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--bd);text-align:center}
+th:first-child,td:first-child{text-align:left}
+th{background:var(--g2);font-size:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.modal.hidden{display:none}
+.sheet{background:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:16px;max-height:90vh;overflow:auto}
+.ck{display:flex;align-items:center;gap:8px;font-size:14px;margin:10px 0}
+.ck input{width:20px;height:20px}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:10px;font-size:14px;z-index:20}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pv{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:12px;font-family:Arial,sans-serif;color:#000}
+.pv h1{text-align:center;font-family:'Arial Black',Arial,sans-serif;font-size:22px;margin:4px 0 12px}
+.pv .pr{display:grid;gap:6px;margin-bottom:6px}
+.pv .b{border:1.5px solid #000;padding:6px 8px;font-size:13px;cursor:pointer;min-height:34px;white-space:pre-wrap;word-break:break-word}
+.pv .b:hover{background:#f3faf5}
+.pv .b b{display:block}
+.pv .b.i b{display:inline}
+.pv .b.vz{color:#b07d00}
+@media(min-width:700px){main{padding-bottom:100px}}
+</style>
+</head>
+<body>
+<header><div class="brand">📚 Organizador de Aulas</div><div class="sub" id="sub">Monte sua semana e ela se repete o ano todo</div></header>
+<main id="app"></main>
+<nav class="tb" id="tb" style="display:none"></nav>
+<div id="modal" class="modal hidden" onclick="if(event.target===this)fechar()"><div class="sheet" id="sheet"></div></div>
+<script id="dados" type="application/json">{}</script>
+<script>
+const SRC=('<!DOCTYPE html>\n'+document.documentElement.outerHTML).replace(/<!-- frame-runtime -->[\s\S]*?<!-- \/frame-runtime -->/g,'');
+const KEY='organizador-aulas-v1', UIKEY='organizador-aulas-ui';
+const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const DC=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const CORES=['#e4572e','#2e86de','#8e44ad','#e1a100','#16a085','#c0392b','#d35400','#2c3e50','#27ae60','#7f8c8d'];
+const app=document.getElementById('app');
+const pad=n=>String(n).padStart(2,'0');
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmt=s=>{const d=pd(s);return pad(d.getDate())+'/'+pad(d.getMonth()+1)};
+const fmtA=s=>fmt(s)+'/'+s.slice(0,4);
+const fmtLong=s=>{const d=pd(s);return DIAS[d.getDay()]+', '+d.getDate()+' de '+MESES[d.getMonth()].toLowerCase()};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TODAY=iso(new Date());
+
+function defaultSlots(){return[['s1','1º horário','07:20','08:05'],['s2','2º horário','08:05','08:50'],['s3','3º horário','08:50','09:35'],['s4','4º horário','09:55','10:40'],['s5','5º horário','10:40','11:30'],['s6','6º horário','13:00','13:45'],['s7','7º horário','13:45','14:30'],['s8','8º horário','14:30','15:15']].map(([id,label,ini,fim])=>({id,label,ini,fim}))}
+function novo(){const y=new Date().getMonth()>=10?new Date().getFullYear()+1:new Date().getFullYear();return{prof:{nome:'',escola:'',disc:'Ciências',discs:['Ciências']},ano:{ini:y+'-02-01',fim:y+'-12-17'},turmas:[],slots:defaultSlots(),grade:{1:{},2:{},3:{},4:{},5:{}},feriados:[],recessos:[],extras:[],aulas:{},setupDone:false}}
+
+function carregar(){
+  try{const t=document.getElementById('dados').textContent;const o=JSON.parse(t);if(o&&o.prof)return o}catch(e){}
+  try{const o=JSON.parse(localStorage.getItem(KEY));if(o&&o.prof)return o}catch(e){}
+  return novo();
+}
+let S=carregar();
+const DISCS=['Ciências','Matemática','Língua Portuguesa','História','Geografia','Inglês','Arte','Educação Física','Ensino Religioso','Projeto de Vida','Protagonismo','Educação Ambiental','Eletiva','P.E. Ciências','P. Exper. Ciências','P. Exper. Matemática','Estudo Orientado'];
+function migrar(){if(!Array.isArray(S.prof.discs)){const l=[];if(S.prof.disc)l.push(S.prof.disc);for(const d in S.grade)for(const k in S.grade[d]){const c=S.grade[d][k].comp;if(c&&!l.includes(c))l.push(c)}S.prof.discs=l}S.prof.disc=S.prof.discs[0]||''}
+migrar();
+let ART=null; let pubTimer=null;
+
+const DL={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data],{type:'application/octet-stream'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download=filename;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);return{status:'saved'}}};
+
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function salvar(publicar){saveLocal();if(publicar)agendarPub()}
+function agendarPub(){clearTimeout(pubTimer);pubTimer=setTimeout(publicar,1200)}
+async function publicar(){
+  if(!ART)return;
+  saveUI();
+  const json=JSON.stringify(S).replace(/</g,'\\u003c');
+  const a='<script id="dados" type="application/json">';const i=SRC.indexOf(a);const j=SRC.indexOf('<\/script>',i);
+  if(i<0||j<0)return;
+  const html=SRC.slice(0,i+a.length)+json+SRC.slice(j);
+  try{await ART.publish(html)}catch(e){toast('Salvo só neste aparelho')}
+}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+
+/* ---------- UI state ---------- */
+let modo=S.setupDone?'app':'wizard', step=0, gradeDay=1, view='semana', filtroTurma='', selDay=null, soVazias=false, lim=40;
+let weekStart, monthCur;
+function clampHoje(){let t=TODAY;if(S.ano.ini&&t<S.ano.ini)t=S.ano.ini;if(S.ano.fim&&t>S.ano.fim)t=S.ano.fim;return t}
+function mondayOf(s){const x=pd(s);const w=x.getDay();return addD(x,w===0?-6:1-w)}
+function resetNav(){const h=clampHoje();weekStart=mondayOf(h);const d=pd(h);monthCur=new Date(d.getFullYear(),d.getMonth(),1);selDay=h}
+resetNav();
+function saveUI(){try{sessionStorage.setItem(UIKEY,JSON.stringify({view,filtroTurma,ws:iso(weekStart),mc:iso(monthCur),selDay}))}catch(e){}}
+try{const u=JSON.parse(sessionStorage.getItem(UIKEY));if(u&&S.setupDone){view=u.view||view;filtroTurma=u.filtroTurma||'';weekStart=pd(u.ws);monthCur=pd(u.mc);selDay=u.selDay}}catch(e){}
+
+/* ---------- feriados ---------- */
+function pascoa(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+function nacionais(y){const p=pascoa(y);return[[y+'-01-01','Confraternização Universal'],[iso(addD(p,-48)),'Carnaval (segunda)'],[iso(addD(p,-47)),'Carnaval (terça)'],[iso(addD(p,-46)),'Quarta-feira de Cinzas'],[iso(addD(p,-2)),'Paixão de Cristo'],[y+'-04-21','Tiradentes'],[y+'-05-01','Dia do Trabalho'],[iso(addD(p,60)),'Corpus Christi'],[y+'-09-07','Independência do Brasil'],[y+'-10-12','N. Sra. Aparecida / Dia das Crianças'],[y+'-11-02','Finados'],[y+'-11-15','Proclamação da República'],[y+'-11-20','Consciência Negra'],[y+'-12-25','Natal']]}
+function syncFeriados(){
+  if(!S.ano.ini||!S.ano.fim)return;
+  const prev={};S.feriados.filter(f=>f.auto).forEach(f=>prev[f.data]=f.ativo);
+  const autos=[];for(let y=+S.ano.ini.slice(0,4);y<=+S.ano.fim.slice(0,4);y++)nacionais(y).forEach(([data,nome])=>{if(data>=S.ano.ini&&data<=S.ano.fim)autos.push({data,nome,auto:true,ativo:prev[data]!==undefined?prev[data]:!/Cinzas/.test(nome)})});
+  S.feriados=[...autos,...S.feriados.filter(f=>!f.auto)].sort((a,b)=>a.data<b.data?-1:1);
+}
+
+/* ---------- motor ---------- */
+const cor=t=>CORES[Math.max(0,S.turmas.indexOf(t))%CORES.length];
+function diaInfo(d,todas){
+  if(!S.ano.ini||d<S.ano.ini||d>S.ano.fim)return{tipo:'fora',aulas:[]};
+  const f=S.feriados.find(x=>x.ativo&&x.data===d);if(f)return{tipo:'feriado',nome:f.nome,aulas:[]};
+  const r=S.recessos.find(x=>d>=x.ini&&d<=x.fim);if(r)return{tipo:'recesso',nome:r.nome||'Recesso',aulas:[]};
+  const ex=S.extras.find(x=>x.data===d);const dow=ex?+ex.dow:pd(d).getDay();const g=S.grade[dow]||{};
+  let aulas=S.slots.filter(s=>g[s.id]).map(s=>{const k=d+'|'+s.id;return{key:k,data:d,slot:s,turma:g[s.id].turma,comp:g[s.id].comp||S.prof.disc,info:S.aulas[k]||{}}});
+  if(!todas&&filtroTurma)aulas=aulas.filter(a=>a.turma===filtroTurma);
+  return{tipo:ex?'extra':'normal',nome:ex?'Dia letivo extra · horário de '+DIAS[dow]:'',aulas};
+}
+function todasAulas(){const out=[];if(!S.ano.ini||!S.ano.fim||S.ano.fim<S.ano.ini)return out;let d=pd(S.ano.ini);const fim=pd(S.ano.fim);while(d<=fim){out.push(...diaInfo(iso(d),true).aulas);d=addD(d,1)}return out}
+let IDX={},TOT={};
+function indexar(){IDX={};TOT={};todasAulas().forEach(a=>{if(a.info.cancel)return;TOT[a.turma]=(TOT[a.turma]||0)+1;IDX[a.key]=TOT[a.turma]})}
+function porSemana(){let n=0;for(const d in S.grade)n+=Object.keys(S.grade[d]).length;return n}
+
+/* ---------- wizard ---------- */
+const STEPS=[['Sobre você',stProf,vProf],['Ano letivo',stAno,vAno],['Suas turmas',stTurmas,vTurmas],['Horários das aulas',stSlots,vSlots],['Sua semana de aulas',stGrade,vGrade],['Feriados e recessos',stFer,()=>''],['Revisão',stRev,()=>'']];
+function renderWizard(){
+  const[t,fn]=STEPS[step];
+  app.innerHTML=`<div class="prog"><div style="width:${(step+1)/STEPS.length*100}%"></div></div><div class="stepn">Etapa ${step+1} de ${STEPS.length}</div><h2>${t}</h2><div id="err" class="err"></div>${fn()}${step===4&&gmode==='passo'?'':`<div class="wnav">${step?'<button class="btn sec" onclick="prev()">Voltar</button>':(S.setupDone?'<button class="btn sec" onclick="sairWizard()">Cancelar</button>':'<span></span>')}${step<STEPS.length-1?'<button class="btn" onclick="next()">Próximo</button>':'<button class="btn" onclick="concluir()">Montar meu horário</button>'}</div>`}`;
+}
+function next(){if(step===3)gmode=null,gq=0;const e=STEPS[step][2]();if(e){document.getElementById('err').textContent='⚠ '+e;window.scrollTo(0,0);return}step++;if(step===5)syncFeriados();salvar();render();window.scrollTo(0,0)}
+function prev(){step--;render();window.scrollTo(0,0)}
+function sairWizard(){S=carregar();migrar();modo='app';render()}
+
+function stProf(){return`<p class="hint">Essas informações aparecem no topo do seu horário.</p>
+<label class="f">Seu nome</label><input value="${esc(S.prof.nome)}" oninput="S.prof.nome=this.value" placeholder="Ex.: Vinícius Mendes">
+<label class="f">Escola</label><input value="${esc(S.prof.escola)}" oninput="S.prof.escola=this.value" placeholder="Ex.: ETI Cândido Reis Costa">
+<label class="f">Disciplinas que você leciona</label>
+<div class="row"><select id="nd"><option value="">Escolha…</option>${DISCS.filter(d=>!S.prof.discs.includes(d)).map(d=>`<option>${d}</option>`).join('')}<option value="__outra">Outra (digitar)</option></select><button class="btn" onclick="addDisc()">Adicionar</button></div>
+<input id="ndo" placeholder="Nome da outra disciplina" style="margin-top:6px;display:none">
+<div class="chips">${S.prof.discs.map((d,i)=>`<span class="chip" style="--c:#1b8a3a">${esc(d)}<button onclick="rmDisc(${i})">×</button></span>`).join('')||'<span class="hint">Nenhuma disciplina ainda.</span>'}</div>
+${S.setupDone?'':`<div class="box"><b>Atalho:</b> <span class="hint">carregar as turmas, horários e aulas de Ciências do horário semanal da foto (ETI Cândido Reis Costa). Depois você ajusta o que quiser.</span><br><button class="btn sec sm" style="margin-top:8px" onclick="exemplo()">Carregar horário da foto</button></div>`}`}
+function vProf(){if(!S.prof.nome.trim())return'Informe seu nome.';if(!S.prof.discs.length)return'Adicione pelo menos uma disciplina.';return''}
+function addDisc(){const sel=document.getElementById('nd'),o=document.getElementById('ndo');if(sel.value==='__outra'&&o.style.display==='none'){o.style.display='block';o.focus();return}const v=sel.value==='__outra'?o.value.trim():sel.value;if(!v)return;if(!S.prof.discs.includes(v))S.prof.discs.push(v);S.prof.disc=S.prof.discs[0];salvar();render()}
+function rmDisc(i){S.prof.discs.splice(i,1);S.prof.disc=S.prof.discs[0]||'';salvar();render()}
+
+function stAno(){return`<p class="hint">Sua semana de aulas vai se repetir entre essas duas datas.</p>
+<div class="grid2"><div><label class="f">Início das aulas</label><input type="date" value="${S.ano.ini}" onchange="S.ano.ini=this.value"></div><div><label class="f">Fim das aulas</label><input type="date" value="${S.ano.fim}" onchange="S.ano.fim=this.value"></div></div>`}
+function vAno(){if(!S.ano.ini||!S.ano.fim)return'Informe as duas datas.';if(S.ano.fim<=S.ano.ini)return'O fim precisa ser depois do início.';return''}
+
+function stTurmas(){return`<p class="hint">Cadastre só as turmas em que você dá aula.</p>
+<div class="row"><select id="ns">${['6º Ano','7º Ano','8º Ano','9º Ano','1ª Série','2ª Série','3ª Série'].map(x=>`<option>${x}</option>`).join('')}</select><select id="nl" style="flex:0 0 110px"><option value="">Sem letra</option>${'ABCDEF'.split('').map(x=>`<option>${x}</option>`).join('')}</select><button class="btn" onclick="addTurma()">Adicionar</button></div>
+<div class="chips">${S.turmas.map((t,i)=>`<span class="chip" style="--c:${cor(t)}">${esc(t)}<button onclick="rmTurma(${i})">×</button></span>`).join('')||'<span class="hint">Nenhuma turma ainda.</span>'}</div>`}
+function addTurma(){const s=document.getElementById('ns').value,l=document.getElementById('nl').value;const v=l?s.replace(/ (Ano|Série)$/,'')+' '+l:s;if(!S.turmas.includes(v))S.turmas.push(v);salvar();render()}
+function rmTurma(i){const t=S.turmas[i];S.turmas.splice(i,1);for(const d in S.grade)for(const s in S.grade[d])if(S.grade[d][s].turma===t)delete S.grade[d][s];salvar();render()}
+function vTurmas(){return S.turmas.length?'':'Adicione pelo menos uma turma.'}
+
+function stSlots(){return`<p class="hint">Os horários de aula da escola (sem intervalo e almoço).</p>
+${S.slots.map((s,i)=>`<div class="srow"><input value="${esc(s.label)}" onchange="S.slots[${i}].label=this.value"><input type="time" value="${s.ini}" onchange="S.slots[${i}].ini=this.value"><input type="time" value="${s.fim}" onchange="S.slots[${i}].fim=this.value"><button class="x" onclick="rmSlot(${i})">×</button></div>`).join('')}
+<button class="link" onclick="addSlot()">+ Adicionar horário</button>`}
+function addSlot(){const l=S.slots[S.slots.length-1];S.slots.push({id:'s'+Date.now(),label:(S.slots.length+1)+'º horário',ini:l?l.fim:'07:00',fim:''});render()}
+function rmSlot(i){const id=S.slots[i].id;S.slots.splice(i,1);for(const d in S.grade)delete S.grade[d][id];render()}
+function vSlots(){if(!S.slots.length)return'Adicione pelo menos um horário.';for(const s of S.slots){if(!s.ini||!s.fim)return'Preencha início e fim de "'+s.label+'".';if(s.fim<=s.ini)return'"'+s.label+'" termina antes de começar.'}S.slots.sort((a,b)=>a.ini<b.ini?-1:1);return''}
+
+let gmode=null,gq=0;
+function gSeq(){const L=[];[1,2,3,4,5].forEach(d=>S.slots.forEach(s=>L.push([d,s])));return L}
+function stPasso(){
+  const L=gSeq();if(gq>=L.length){gmode='resumo';return stGrade()}
+  const[d,s]=L[gq];const g=S.grade[d]||(S.grade[d]={}),a=g[s.id];
+  return`<p class="hint">Escolha a turma de cada horário, do 1º horário de segunda até o último de sexta. Se não tiver aula, toque em "Livre".</p>
+<div class="prog"><div style="width:${(gq+1)/L.length*100}%"></div></div><div class="stepn">Horário ${gq+1} de ${L.length}</div>
+<div class="box" style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--g)">${DIAS[d]}-feira</div><div style="font-size:17px;font-weight:700;margin-top:2px">${esc(s.label)}</div><div class="hint" style="margin:2px 0 0">${s.ini} – ${s.fim}</div></div>
+<label class="f">Turma</label>
+<div class="chips" style="margin-top:4px">${S.turmas.map((t,i)=>`<button class="tab ${a&&a.turma===t?'on':''}" style="flex:0 0 auto" onclick="pSetT(${i})">${esc(t)}</button>`).join('')}<button class="tab ${a?'':'on'}" style="flex:0 0 auto" onclick="pSetT(-1)">Livre</button></div>
+${a?`<label class="f">Matéria</label><select onchange="S.grade[${d}]['${s.id}'].comp=this.value;salvar()">${(S.prof.discs.includes(a.comp)||!a.comp?S.prof.discs:[a.comp,...S.prof.discs]).map(x=>`<option ${x===a.comp?'selected':''}>${esc(x)}</option>`).join('')}</select>`:''}
+<div class="wnav"><button class="btn sec" onclick="gNav(-1)">Voltar</button><button class="btn" onclick="gNav(1)">${gq===L.length-1?'Concluir semana':'Próximo'}</button></div>
+<button class="link" style="width:100%;margin-top:6px" onclick="gPulaDia()">Não tenho mais aula ${d===5?'na sexta':'neste dia'} →</button>`}
+function pSetT(i){const[d,s]=gSeq()[gq];const g=S.grade[d]||(S.grade[d]={});if(i<0){delete g[s.id];salvar();return gNav(1)}g[s.id]={turma:S.turmas[i],comp:(g[s.id]&&g[s.id].comp)||S.prof.discs[0]||''};salvar();render()}
+function gNav(n){if(gq===0&&n<0){step--;gmode=null;return render()}gq+=n;if(gq>=gSeq().length)gmode='resumo';render();window.scrollTo(0,0)}
+function gPulaDia(){const L=gSeq(),d=L[gq][0];while(gq<L.length&&L[gq][0]===d){delete S.grade[d][L[gq][1].id];gq++}salvar();if(gq>=L.length)gmode='resumo';render();window.scrollTo(0,0)}
+function stGrade(){
+  if(gmode===null)gmode=porSemana()?'resumo':'passo';
+  if(gmode==='passo')return stPasso();
+  const g=S.grade[gradeDay]||(S.grade[gradeDay]={});
+  return`<p class="hint">Escolha a turma em cada horário em que você dá aula. Deixe "livre" nos outros. Essa semana vai se repetir o ano todo.</p>
+<div class="tabs">${[1,2,3,4,5].map(d=>`<button class="tab ${d===gradeDay?'on':''}" onclick="gradeDay=${d};render()">${DC[d]} <small>${Object.keys(S.grade[d]||{}).length}</small></button>`).join('')}</div>
+${S.slots.map(s=>{const a=g[s.id];return`<div class="slotrow ${a?'busy':''}"><div class="st"><b>${esc(s.label)}</b><small>${s.ini}–${s.fim}</small></div><select onchange="setG('${s.id}',this.value)"><option value="">— livre —</option>${S.turmas.map((t,i)=>`<option value="${i}" ${a&&a.turma===t?'selected':''}>${esc(t)}</option>`).join('')}</select>${a?`<select style="grid-column:2" onchange="setC('${s.id}',this.value)">${(S.prof.discs.includes(a.comp)||!a.comp?S.prof.discs:[a.comp,...S.prof.discs]).map(d=>`<option ${d===a.comp?'selected':''}>${esc(d)}</option>`).join('')}</select>`:''}</div>`}).join('')}
+<p class="hint" style="margin-top:10px">Total: <b>${porSemana()}</b> aulas por semana.</p>
+<button class="btn sec" style="width:100%" onclick="gmode='passo';gq=0;render()">Preencher horário por horário (seg → sex)</button>`}
+function setG(id,v){const g=S.grade[gradeDay];if(v==='')delete g[id];else{const t=S.turmas[+v];g[id]={turma:t,comp:(g[id]&&g[id].comp)||S.prof.discs[0]||''}}salvar();render()}
+function setC(id,v){S.grade[gradeDay][id].comp=v;salvar()}
+function vGrade(){return porSemana()?'':'Marque pelo menos uma aula na semana.'}
+
+function stFer(){
+  return`<p class="hint">Nos dias marcados não haverá aula. Desmarque os que sua escola não segue.</p>
+<div class="box">${S.feriados.map((f,i)=>{const w=pd(f.data).getDay();const fds=w===0||w===6;return`<div class="fer ${fds?'wk':''}"><input type="checkbox" ${f.ativo?'checked':''} onchange="S.feriados[${i}].ativo=this.checked;salvar()"><span class="d">${fmt(f.data)} ${DC[w]}</span><span class="n">${esc(f.nome)}${fds?' <span class="tag">fim de semana</span>':''}</span>${f.auto?'':`<button class="x" onclick="S.feriados.splice(${i},1);render()">×</button>`}</div>`}).join('')||'<span class="hint">Nenhum.</span>'}</div>
+<label class="f">Adicionar feriado municipal / estadual / ponto facultativo</label>
+<div class="row"><input type="date" id="fd" style="flex:0 0 150px"><input id="fn" placeholder="Nome (ex.: Aniversário da cidade)"><button class="btn sm" onclick="addFer()">+</button></div>
+<h3 style="margin-top:22px;font-size:16px">Recessos e férias</h3>
+<div class="box">${S.recessos.map((r,i)=>`<div class="fer"><span class="n"><b>${fmt(r.ini)} a ${fmt(r.fim)}</b> · ${esc(r.nome)}</span><button class="x" onclick="S.recessos.splice(${i},1);render()">×</button></div>`).join('')||'<span class="hint">Nenhum (ex.: férias de julho).</span>'}</div>
+<div class="grid2"><input type="date" id="ri"><input type="date" id="rf"></div>
+<div class="row" style="margin-top:6px"><input id="rn" placeholder="Nome (ex.: Férias de julho)"><button class="btn sm" onclick="addRec()">+</button></div>
+<h3 style="margin-top:22px;font-size:16px">Sábados letivos</h3>
+<p class="hint">Dias extras de aula, seguindo o horário de um dia da semana.</p>
+<div class="box">${S.extras.map((x,i)=>`<div class="fer"><span class="n"><b>${fmt(x.data)}</b> · horário de ${DIAS[x.dow]}</span><button class="x" onclick="S.extras.splice(${i},1);render()">×</button></div>`).join('')||'<span class="hint">Nenhum.</span>'}</div>
+<div class="row"><input type="date" id="xd" style="flex:0 0 150px"><select id="xw">${[1,2,3,4,5].map(d=>`<option value="${d}">Horário de ${DIAS[d]}</option>`).join('')}</select><button class="btn sm" onclick="addExt()">+</button></div>`}
+function erro(t){const e=document.getElementById('err');e.textContent='⚠ '+t;window.scrollTo(0,0)}
+function addFer(){const d=document.getElementById('fd').value,n=document.getElementById('fn').value.trim();if(!d)return erro('Escolha a data do feriado.');S.feriados.push({data:d,nome:n||'Feriado',auto:false,ativo:true});S.feriados.sort((a,b)=>a.data<b.data?-1:1);salvar();render()}
+function addRec(){const a=document.getElementById('ri').value,b=document.getElementById('rf').value,n=document.getElementById('rn').value.trim();if(!a||!b||b<a)return erro('Escolha início e fim do recesso.');S.recessos.push({ini:a,fim:b,nome:n||'Recesso'});salvar();render()}
+function addExt(){const d=document.getElementById('xd').value;if(!d)return erro('Escolha a data do sábado letivo.');S.extras.push({data:d,dow:+document.getElementById('xw').value});S.extras.sort((a,b)=>a.data<b.data?-1:1);salvar();render()}
+
+function stRev(){
+  indexar();const tot=Object.values(TOT).reduce((a,b)=>a+b,0);
+  const ferAula=S.feriados.filter(f=>f.ativo&&Object.keys(S.grade[pd(f.data).getDay()]||{}).length).length;
+  return`<div class="box"><b>${esc(S.prof.nome)}</b> · ${esc(S.prof.discs.join(', '))}${S.prof.escola?' · '+esc(S.prof.escola):''}<br><span class="hint">Ano letivo: ${fmtA(S.ano.ini)} a ${fmtA(S.ano.fim)}</span></div>
+<div class="box">📅 <b>${porSemana()}</b> aulas por semana<br>🎉 <b>${ferAula}</b> feriados caem em dia de aula sua<br>🏖 <b>${S.recessos.length}</b> recesso(s) · <b>${S.extras.length}</b> sábado(s) letivo(s)<br>📚 <b>${tot}</b> aulas no ano</div>
+<table><tr><th>Turma</th><th>Aulas/semana</th><th>Aulas no ano</th></tr>${S.turmas.map(t=>{let n=0;for(const d in S.grade)for(const s in S.grade[d])if(S.grade[d][s].turma===t)n++;return`<tr><td><span class="chip" style="--c:${cor(t)}">${esc(t)}</span></td><td>${n}</td><td>${TOT[t]||0}</td></tr>`}).join('')}</table>`}
+function concluir(){S.setupDone=true;modo='app';resetNav();view='semana';salvar(true);render();toast('Horário montado!')}
+
+function exemplo(){
+  S.turmas=['6º A','6º B','7º Ano','8º Ano'];S.slots=defaultSlots();
+  const C='Ciências',PE='P.E. Ciências',EA='Educação Ambiental',PX='P. Exper. Ciências',T=(turma,comp)=>({turma,comp});
+  S.grade={1:{s4:T('7º Ano',C),s5:T('6º B',C)},2:{},3:{s1:T('6º B',C),s2:T('6º B',C),s4:T('6º A',C),s5:T('6º A',C),s6:T('8º Ano',PE),s8:T('6º A',PE)},4:{s1:T('7º Ano',C),s2:T('7º Ano',C),s5:T('7º Ano',PE),s6:T('6º B',EA),s7:T('8º Ano',C),s8:T('8º Ano',C)},5:{s2:T('6º A',EA),s6:T('6º A',C),s7:T('6º B',PX),s8:T('8º Ano',C)}};
+  if(!S.prof.escola)S.prof.escola='ETI Cândido Reis Costa';[C,PE,EA,PX].forEach(d=>{if(!S.prof.discs.includes(d))S.prof.discs.push(d)});S.prof.disc=S.prof.discs[0];
+  salvar();render();toast('Horário da foto carregado')
+}
+
+/* ---------- app ---------- */
+function renderApp(){
+  indexar();
+  document.getElementById('sub').textContent=[S.prof.nome,S.prof.discs.join(', '),S.prof.escola].filter(Boolean).join(' · ');
+  const filt=view==='resumo'?'':`<div class="filt"><select onchange="filtroTurma=this.value;saveUI();render()"><option value="">Todas as turmas</option>${S.turmas.map(t=>`<option ${t===filtroTurma?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
+  app.innerHTML=(view==='resumo'?'':pendencias())+filt+({semana:vSemana,mes:vMes,lista:vLista,resumo:vResumo}[view])();
+  const tb=document.getElementById('tb');tb.style.display='flex';
+  tb.innerHTML=[['semana','🗓','Semana'],['mes','📅','Mês'],['lista','📋','Próximas'],['resumo','📊','Resumo']].map(([v,i,l])=>`<button class="${v===view?'on':''}" onclick="view='${v}';listaModo='';lim=40;saveUI();render();window.scrollTo(0,0)"><b>${i}</b>${l}</button>`).join('');
+}
+function badge(inf){if(inf.tipo==='feriado')return'<span class="badge fer">Feriado</span>';if(inf.tipo==='recesso')return'<span class="badge fer">Recesso</span>';if(inf.tipo==='extra')return'<span class="badge ext">Dia letivo extra</span>';return''}
+function card(a){const i=a.info,n=IDX[a.key];return`<div class="card ${i.feita?'done':''} ${i.cancel?'cancel':''}" style="--c:${cor(a.turma)}" onclick="abrir('${a.key}')"><div class="ct"><span class="hr">${a.slot.ini}</span><span class="chip" style="--c:${cor(a.turma)}">${esc(a.turma)}</span><span class="comp">${esc(a.comp)}</span>${i.feita?'<span class="ok">✓</span>':''}${i.aval?`<span class="tag" style="background:#fde2e0;color:#c0392b;font-weight:700">📌 ${esc(i.aval)}</span>`:''}${i.plano?'<span class="tag">📝 plano</span>':''}${i.cancel?`<span class="num">🚫 ${esc(i.cancel)}</span>`:n?`<span class="num">aula ${n}/${TOT[a.turma]}</span>`:''}</div><div class="as ${i.assunto?'':'vazio'}">${i.assunto?esc(i.assunto):'+ adicionar assunto do dia'}</div></div>`}
+function diaBloco(d,inf){let h=`<div class="day ${d===TODAY?'today':''}"><div class="dh"><span>${fmtLong(d)}</span>${badge(inf)}</div>`;
+  if(inf.tipo==='feriado'||inf.tipo==='recesso')h+=`<div class="off">Sem aula · ${esc(inf.nome)}</div>`;
+  else if(inf.tipo==='fora')h+='<div class="off">Fora do ano letivo</div>';
+  else if(!inf.aulas.length)h+='<div class="off">Sem aulas suas neste dia</div>';
+  else h+=(inf.tipo==='extra'?`<div class="hint">${esc(inf.nome)}</div>`:'')+inf.aulas.map(card).join('');
+  return h+'</div>'}
+function vSemana(){
+  let h=`<div class="nav"><button onclick="mvW(-7)">‹</button><b>${fmt(iso(weekStart))} a ${fmt(iso(addD(weekStart,5)))}</b><button onclick="mvW(7)">›</button></div><div style="display:flex;justify-content:space-between;align-items:center"><button class="link" onclick="resetNav();saveUI();render()">Ir para hoje</button>${DL?'<button class="link" onclick="baixarSemana()">⬇ Planos da semana (.docx)</button>':''}</div>`;
+  for(let i=0;i<6;i++){const d=iso(addD(weekStart,i));const inf=diaInfo(d);if(i===5&&inf.tipo!=='extra')continue;h+=diaBloco(d,inf)}
+  return h}
+function mvW(n){weekStart=addD(weekStart,n);saveUI();render()}
+function vMes(){
+  const y=monthCur.getFullYear(),m=monthCur.getMonth(),first=new Date(y,m,1),start=addD(first,-first.getDay());
+  let h=`<div class="nav"><button onclick="mvM(-1)">‹</button><b>${MESES[m]} ${y}</b><button onclick="mvM(1)">›</button></div><div class="mgrid">${['D','S','T','Q','Q','S','S'].map(x=>`<div class="mh">${x}</div>`).join('')}`;
+  const rows=Math.ceil((first.getDay()+new Date(y,m+1,0).getDate())/7);
+  for(let i=0;i<rows*7;i++){const dt=addD(start,i),d=iso(dt),inf=diaInfo(d),n=inf.aulas.length,sem=inf.aulas.filter(a=>!a.info.assunto).length;
+    h+=`<div class="mc${dt.getMonth()!==m?' out':''}${d===TODAY?' today':''}${d===selDay?' sel':''}${inf.tipo==='feriado'||inf.tipo==='recesso'?' hol':''}" onclick="selDay='${d}';saveUI();render()"><span>${dt.getDate()}${inf.aulas.some(a=>a.info.aval)?' <b style="color:#c0392b">📌</b>':''}</span>${n?`<i class="${sem?'pend':'full'}">${n}</i>`:''}</div>`}
+  h+=`</div><div class="leg"><span style="--lc:#1b8a3a">com assunto</span><span style="--lc:#f6c343">falta assunto</span><span style="--lc:#fdecea">feriado/recesso</span><span>📌 avaliação</span></div>`;
+  if(selDay)h+=diaBloco(selDay,diaInfo(selDay));
+  return h}
+function mvM(n){monthCur=new Date(monthCur.getFullYear(),monthCur.getMonth()+n,1);saveUI();render()}
+function vLista(){
+  if(listaModo){const sp=listaModo==='semplano';let h=`<div class="nav" style="padding:8px 10px"><b>${sp?'Aulas desta semana sem plano':'Aulas passadas sem marcar como dada'}</b><button onclick="listaModo='';render()" style="width:auto;padding:0 10px;font-size:14px">✕</button></div>`,c=0;
+    let d=sp?mondayOf(TODAY):pd(S.ano.ini);const fim=sp?addD(mondayOf(TODAY),5):addD(pd(TODAY<S.ano.fim?TODAY:S.ano.fim),-1);
+    while(d<=fim){const di=iso(d),inf=diaInfo(di);const as=inf.aulas.filter(a=>!a.info.cancel&&(sp?!a.info.plano:!a.info.feita));if(as.length){h+=`<div class="day"><div class="dh"><span>${fmtLong(di)}</span></div>${as.map(a=>card(a)+(sp?'':`<button class="btn sec sm" style="margin:-2px 0 8px" onclick="marcarDada('${a.key}',event)">✓ Marcar como dada</button>`)).join('')}</div>`;c+=as.length}d=addD(d,1)}
+    return h+(c?'':'<div class="off">Tudo em dia! 🎉</div>')}
+  let h=`<label class="ck"><input type="checkbox" ${soVazias?'checked':''} onchange="soVazias=this.checked;lim=40;render()"> Só aulas sem assunto</label>`;
+  let d=pd(clampHoje()),c=0;const fim=pd(S.ano.fim);
+  while(d<=fim&&c<lim){const di=iso(d),inf=diaInfo(di);let as=inf.aulas;if(soVazias)as=as.filter(a=>!a.info.assunto);if(as.length){h+=`<div class="day ${di===TODAY?'today':''}"><div class="dh"><span>${fmtLong(di)}</span>${badge(inf)}</div>${as.map(card).join('')}</div>`;c+=as.length}d=addD(d,1)}
+  if(!c)h+='<div class="off">Nenhuma aula encontrada.</div>';else if(d<=fim)h+='<button class="btn sec" style="width:100%;margin-top:10px" onclick="lim+=40;render()">Mostrar mais</button>';
+  return h}
+function vResumo(){
+  const all=todasAulas().filter(a=>!a.info.cancel);
+  const rows=S.turmas.map(t=>{const a=all.filter(x=>x.turma===t);return`<tr><td><span class="chip" style="--c:${cor(t)}">${esc(t)}</span></td><td>${a.length}</td><td>${a.filter(x=>x.data<=TODAY).length}</td><td>${a.filter(x=>x.info.assunto).length}</td><td>${a.filter(x=>x.info.feita).length}</td><td>${a.filter(x=>x.info.aval).length}</td></tr>`}).join('');
+  const fer=S.feriados.filter(f=>f.ativo&&Object.keys(S.grade[pd(f.data).getDay()]||{}).length);
+  return`<h2>Resumo do ano</h2><p class="hint">${fmtA(S.ano.ini)} a ${fmtA(S.ano.fim)} · ${porSemana()} aulas por semana</p>
+<table><tr><th>Turma</th><th>Total</th><th>Até hoje</th><th>Com assunto</th><th>Dadas</th><th>Avaliações</th></tr>${rows}<tr><td><b>Total</b></td><td><b>${all.length}</b></td><td><b>${all.filter(x=>x.data<=TODAY).length}</b></td><td><b>${all.filter(x=>x.info.assunto).length}</b></td><td><b>${all.filter(x=>x.info.feita).length}</b></td><td><b>${all.filter(x=>x.info.aval).length}</b></td></tr></table>
+<h3 style="font-size:16px;margin-top:20px">📌 Avaliações</h3>
+${(()=>{const av=all.filter(x=>x.info.aval);if(!av.length)return'<div class="off">Nenhuma avaliação marcada. Abra uma aula e escolha o tipo em "Avaliação nesta aula".</div>';const prox=av.filter(x=>x.data>=TODAY),pass=av.filter(x=>x.data<TODAY);return(prox.length?'<div class="hint" style="margin:6px 0">Próximas</div>'+prox.map(card).join(''):'')+(pass.length?'<div class="hint" style="margin:10px 0 6px">Já aplicadas</div>'+pass.map(card).join(''):'')})()}
+<h3 style="font-size:16px;margin-top:20px">Feriados que caem em dia de aula</h3>
+<div class="box">${fer.map(f=>`<div class="fer"><span class="d">${fmt(f.data)} ${DC[pd(f.data).getDay()]}</span><span class="n">${esc(f.nome)}</span></div>`).join('')||'<span class="hint">Nenhum.</span>'}</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+${DL?'<button class="btn" onclick="baixarCSV()">⬇ Baixar planilha do ano (.csv)</button>':''}
+<button class="btn sec" onclick="copiarCSV()">Copiar planilha do ano</button>
+<h3 style="font-size:16px;margin:14px 0 0">💾 Backup</h3><p class="hint" style="margin:0">Guarda tudo: configuração, grade, feriados, assuntos, planos e avaliações.</p>
+${DL?'<button class="btn" onclick="baixarBackup()">⬇ Baixar backup</button>':''}
+<button class="btn sec" onclick="copiarBackup()">Copiar backup (texto)</button>
+<label class="btn sec" style="text-align:center">⬆ Importar backup<input type="file" accept=".json,application/json,text/plain" style="display:none" onchange="lerBackup(this.files[0]);this.value=''"></label>
+<button class="link" onclick="colarBackup()">Importar colando o texto do backup</button>
+<button class="btn sec" onclick="modo=\'wizard\';step=0;render()">⚙ Editar configuração (turmas, grade, feriados)</button>
+<button class="btn red" onclick="confirmarReset()">Apagar tudo e começar do zero</button></div>`}
+function gerarCSV(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const L=[['Data','Dia','Horário','Turma','Componente','Nº da aula','Assunto','Observação','Aula dada'].map(q).join(';')];todasAulas().forEach(a=>L.push([fmtA(a.data),DIAS[pd(a.data).getDay()],a.slot.ini+'-'+a.slot.fim,a.turma,a.comp,IDX[a.key],a.info.assunto,a.info.obs,a.info.feita?'Sim':'Não'].map(q).join(';')));return'﻿'+L.join('\r\n')}
+async function baixarCSV(){try{await DL.save({filename:'aulas-'+S.ano.ini.slice(0,4)+'.csv',data:gerarCSV()})}catch(e){toast('Download cancelado')}}
+function backupTxt(){return JSON.stringify({app:'organizador-aulas',versao:1,salvoEm:new Date().toISOString(),dados:S})}
+async function baixarBackup(){try{await DL.save({filename:'backup-organizador-aulas-'+TODAY+'.json',data:backupTxt()});toast('Backup baixado')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui. Use "Copiar backup".')}}
+async function copiarBackup(){try{await navigator.clipboard.writeText(backupTxt());toast('Backup copiado. Cole num lugar seguro (ex.: WhatsApp, e-mail).')}catch(e){toast('Não foi possível copiar')}}
+let bkPend=null;
+function validarBackup(txt){try{let o=JSON.parse(txt);if(o&&o.dados)o=o.dados;if(!o||!o.prof||!o.ano||!Array.isArray(o.turmas)||!o.grade)return null;o.aulas=o.aulas||{};o.feriados=o.feriados||[];o.recessos=o.recessos||[];o.extras=o.extras||[];o.slots=o.slots||defaultSlots();return o}catch(e){return null}}
+function confirmarBackup(o){if(!o){abrirSheet('<h2>Arquivo inválido</h2><p>Esse arquivo não é um backup do Organizador de Aulas.</p><div class="wnav"><span></span><button class="btn" onclick="fechar()">OK</button></div>');return}
+  bkPend=o;const n=Object.keys(o.aulas).length,pl=Object.values(o.aulas).filter(a=>a.plano).length;
+  abrirSheet(`<h2>Importar backup?</h2><div class="box"><b>${esc(o.prof.nome)}</b>${o.prof.escola?' · '+esc(o.prof.escola):''}<br><span class="hint">Ano letivo ${fmtA(o.ano.ini)} a ${fmtA(o.ano.fim)} · ${o.turmas.length} turma(s) · ${n} aula(s) com anotação · ${pl} plano(s)</span></div><p>Isso <b>substitui tudo</b> o que está no app agora pelo conteúdo do backup.</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn" onclick="aplicarBackup()">Importar</button></div>`)}
+function lerBackup(f){if(!f)return;const r=new FileReader();r.onload=()=>confirmarBackup(validarBackup(r.result));r.onerror=()=>toast('Não foi possível ler o arquivo');r.readAsText(f)}
+function colarBackup(){abrirSheet(`<h2>Colar backup</h2><p class="hint">Cole aqui o texto do backup.</p><textarea id="bkt" style="min-height:160px"></textarea><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn" onclick="confirmarBackup(validarBackup(document.getElementById('bkt').value))">Continuar</button></div>`)}
+function aplicarBackup(){if(!bkPend)return;S=bkPend;bkPend=null;migrar();S.setupDone=true;modo='app';resetNav();view='semana';fechar();salvar(true);render();toast('Backup importado')}
+async function copiarCSV(){try{await navigator.clipboard.writeText(gerarCSV().slice(1));toast('Planilha copiada — cole no Excel/Sheets')}catch(e){toast('Não foi possível copiar')}}
+function confirmarReset(){abrirSheet(`<h2>Apagar tudo?</h2><p>Isso apaga a configuração e todos os assuntos cadastrados. Não dá para desfazer.</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn red" onclick="resetar()">Apagar</button></div>`)}
+function resetar(){S=novo();try{localStorage.removeItem(KEY);sessionStorage.removeItem(UIKEY)}catch(e){}modo='wizard';step=0;fechar();document.getElementById('tb').style.display='none';salvar(true);render()}
+
+/* ---------- modal da aula ---------- */
+function abrirSheet(h){document.getElementById('sheet').innerHTML=h;document.getElementById('modal').classList.remove('hidden')}
+function fechar(){document.getElementById('modal').classList.add('hidden')}
+let aberta=null;
+function abrir(key){const[d,sid]=key.split('|');const a=diaInfo(d,true).aulas.find(x=>x.slot.id===sid);if(!a)return;aberta=a;const i=a.info;
+  abrirSheet(`<div class="ct"><span class="chip" style="--c:${cor(a.turma)}">${esc(a.turma)}</span><span class="comp">${esc(a.comp)}</span><span class="num">aula ${IDX[key]}/${TOT[a.turma]}</span></div>
+<p style="margin:8px 0 0;font-weight:700;text-transform:capitalize">${fmtLong(d)}</p><p class="hint">${esc(a.slot.label)} · ${a.slot.ini}–${a.slot.fim}</p>
+<label class="f">Assunto do dia</label><textarea id="m_as" placeholder="Ex.: Ciclo da água — evaporação e condensação">${esc(i.assunto)}</textarea>
+<label class="f">Observações (atividade, material, tarefa)</label><textarea id="m_ob" placeholder="Opcional">${esc(i.obs)}</textarea>
+<label class="f">Avaliação nesta aula</label><select id="m_av"><option value="">Nenhuma</option>${AVS.map(x=>`<option ${i.aval===x?'selected':''}>${x}</option>`).join('')}</select>
+<label class="ck"><input type="checkbox" id="m_ok" ${i.feita?'checked':''}> Aula dada</label>
+<button class="btn sec" style="width:100%" onclick="abrirPlano()">📝 ${i.plano?'Ver / editar plano de aula':'Fazer plano de aula'}</button>
+${i.plano?'<button class="btn sec" style="width:100%;margin-top:8px" onclick="copiarPara()">📋 Copiar plano para outra turma</button>':''}
+<div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn" onclick="salvarAula()">Salvar</button></div>
+${i.cancel?'':`<button class="link" style="width:100%;margin-top:10px;color:var(--mu);font-weight:500;font-size:13px" onclick="this.style.display='none';document.getElementById('m_cbox').style.display='block'">🚫 Esta aula não aconteceu?</button>`}
+<div id="m_cbox" style="display:${i.cancel?'block':'none'};margin-top:10px;border-top:1px solid var(--bd);padding-top:6px"><label class="f">A aula aconteceu?</label><select id="m_cn"><option value="">Sim, normalmente</option>${CANCS.map(x=>`<option ${i.cancel===x?'selected':''}>${x}</option>`).join('')}</select>
+<p class="hint" style="margin:6px 0 0">Escolha o motivo e toque em Salvar.</p>
+${i.cancel&&(i.assunto||i.plano)?`<button class="btn sec sm" style="margin-top:8px;width:100%" onclick="moverProxima('${a.key}')">➡ Passar assunto e plano para a próxima aula do ${esc(a.turma)}</button>`:''}</div>`)}
+const CANCS=['Não houve: paralisação','Não houve: evento da escola','Não houve: reunião/planejamento','Não houve: falta do professor','Não houve: chuva/transporte','Não houve: outro motivo'];
+const AVS=['Prova','Trabalho','Seminário','Projeto','Simulado','Recuperação','Atividade avaliativa'];
+function salvarAula(){const as=document.getElementById('m_as').value.trim(),ob=document.getElementById('m_ob').value.trim(),ok=document.getElementById('m_ok').checked,av=document.getElementById('m_av').value,cn=document.getElementById('m_cn').value;
+  const pl=(S.aulas[aberta.key]||{}).plano;
+  if(!as&&!ob&&!ok&&!pl&&!av&&!cn)delete S.aulas[aberta.key];else S.aulas[aberta.key]=Object.assign({assunto:as,obs:ob,feita:cn?false:ok},pl?{plano:pl}:{},av?{aval:av}:{},cn?{cancel:cn}:{});
+  fechar();salvar(true);render();toast('Aula salva')}
+
+/* ---------- não houve aula / pendências ---------- */
+function proximaAula(key){const[d,sid]=key.split('|');const src=diaInfo(d,true).aulas.find(x=>x.slot.id===sid);if(!src)return null;
+  let dt=pd(d);const fim=pd(S.ano.fim);let first=true;
+  while(dt<=fim){const di=iso(dt);for(const a of diaInfo(di,true).aulas){if(a.turma!==src.turma||a.info.cancel)continue;if(di===d&&a.slot.ini<=src.slot.ini)continue;return a}dt=addD(dt,1)}return null}
+function moverProxima(key,ok){const t=proximaAula(key);if(!t){toast('Não há próxima aula dessa turma no ano letivo');return}
+  const cur=S.aulas[t.key]||{};
+  if((cur.assunto||cur.plano)&&!ok){abrirSheet(`<h2>Próxima aula já tem conteúdo</h2><p>A aula do ${esc(t.turma)} em ${fmt(t.data)} já tem assunto ou plano. Substituir pelo conteúdo da aula que não aconteceu?</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn" onclick="moverProxima('${key}',1)">Substituir</button></div>`);return}
+  const src=S.aulas[key]||{};const pl=src.plano?Object.assign({},src.plano,{serie:t.turma,disciplina:t.comp,data:fmtA(t.data),aula:''}):null;
+  const novo=Object.assign({},cur,{assunto:src.assunto||'',obs:src.obs||''});if(pl)novo.plano=pl;if(src.aval)novo.aval=src.aval;
+  S.aulas[t.key]=novo;S.aulas[key]={cancel:src.cancel};salvar(true);fechar();render();indexar();if(pl){S.aulas[t.key].plano.aula=String(IDX[t.key]||'');salvar(true)}
+  toast('Passado para '+fmt(t.data)+' ('+t.turma+')')}
+let listaModo='';
+function pendencias(){const ws=mondayOf(TODAY);let sp=0,nd=0;
+  for(let i=0;i<6;i++)diaInfo(iso(addD(ws,i)),true).aulas.forEach(a=>{if(!a.info.cancel&&!a.info.plano)sp++});
+  if(S.ano.ini&&S.ano.ini<TODAY){let d=pd(S.ano.ini);const lim=pd(TODAY<S.ano.fim?TODAY:S.ano.fim);while(d<lim){diaInfo(iso(d),true).aulas.forEach(a=>{if(!a.info.cancel&&!a.info.feita)nd++});d=addD(d,1)}}
+  if(!sp&&!nd)return'';
+  return`<div class="pend">⚠ ${sp?`<button onclick="listaModo='semplano';view='lista';lim=40;render()">${sp} aula${sp>1?'s':''} desta semana sem plano</button>`:''}${sp&&nd?' · ':''}${nd?`<button onclick="listaModo='naodadas';view='lista';lim=40;render()">${nd} aula${nd>1?'s':''} passada${nd>1?'s':''} sem marcar como dada</button>`:''}</div>`}
+function marcarDada(key,ev){if(ev)ev.stopPropagation();S.aulas[key]=Object.assign({},S.aulas[key]||{},{feita:true});salvar(true);render()}
+
+/* ---------- copiar plano / planos da semana ---------- */
+function copiarPara(){const src=aberta,pl=(S.aulas[src.key]||{}).plano;if(!pl)return;
+  let d=pd(src.data),L=[];const fim=addD(d,21);while(d<=fim&&d<=pd(S.ano.fim)){const di=iso(d);diaInfo(di,true).aulas.forEach(a=>{if(a.turma!==src.turma)L.push(a)});d=addD(d,1)}
+  abrirSheet(`<h2>Copiar plano para…</h2><p class="hint">Plano de <b>${esc(src.turma)}</b> · ${fmt(src.data)} · ${esc(pl.topico||'')}. Escolha a aula de destino (próximas 3 semanas).</p>
+${L.length?L.map(a=>`<div class="card" style="--c:${cor(a.turma)}" onclick="copiarPlano('${src.key}','${a.key}')"><div class="ct"><span class="hr">${fmt(a.data)} ${DC[pd(a.data).getDay()]} ${a.slot.ini}</span><span class="chip" style="--c:${cor(a.turma)}">${esc(a.turma)}</span><span class="comp">${esc(a.comp)}</span>${a.info.plano?'<span class="tag">já tem plano</span>':''}</div></div>`).join(''):'<div class="off">Nenhuma aula de outra turma nas próximas 3 semanas.</div>'}
+<div class="wnav"><button class="btn sec" onclick="fechar();abrir('${src.key}')">Voltar</button></div>`)}
+let copiaPend=null;
+function copiarPlano(from,to,ok){const[d,sid]=to.split('|');const a=diaInfo(d,true).aulas.find(x=>x.slot.id===sid);if(!a)return;const cur=S.aulas[to]||{};
+  if(cur.plano&&!ok){abrirSheet(`<h2>Substituir plano?</h2><p>A aula de ${esc(a.turma)} em ${fmt(d)} já tem um plano. Quer trocar pelo plano copiado?</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn" onclick="copiarPlano('${from}','${to}',1)">Substituir</button></div>`);return}
+  const pl=Object.assign({},S.aulas[from].plano,{serie:a.turma,disciplina:a.comp,data:fmtA(d),aula:String(IDX[to]||'')});
+  S.aulas[to]=Object.assign({},cur,{plano:pl});if(!S.aulas[to].assunto)S.aulas[to].assunto=pl.topico||S.aulas[from].assunto||'';
+  fechar();salvar(true);render();toast('Plano copiado para '+a.turma+' ('+fmt(d)+')')}
+async function baixarSemana(){
+  const L=[];for(let i=0;i<6;i++){diaInfo(iso(addD(weekStart,i))).aulas.forEach(a=>{if(a.info.plano)L.push(a)})}
+  if(!L.length){toast('Nenhum plano feito nesta semana');return}
+  if(!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
+  const ps=L.map(a=>{P=Object.assign({},a.info.plano);return pFinal()});
+  let blob;try{blob=await docx.Packer.toBlob(montarPlanosDoc(docx,ps))}catch(e){toast('Erro ao gerar o Word');return}
+  try{await DL.save({filename:'Planos_semana_'+fmt(iso(weekStart)).replace('/','-')+'_a_'+fmt(iso(addD(weekStart,5))).replace('/','-')+'.docx',data:blob});toast(L.length+' plano(s) baixados')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}}
+
+/* ---------- plano de aula ---------- */
+function planoSecao(D,p){
+  p=p||{};
+  const W=10466,F='Arial',B={style:D.BorderStyle.SINGLE,size:8,color:'000000'},N={style:D.BorderStyle.NONE,size:0,color:'FFFFFF'};
+  const BOX={top:B,bottom:B,left:B,right:B},NONE={top:N,bottom:N,left:N,right:N};
+  const linhas=t=>String(t||'').split(/\r?\n/);
+  const run=(t,b)=>new D.TextRun({text:t,bold:!!b,font:F,size:22});
+  function cel(w,label,valor,inline){
+    const kids=[];
+    if(inline){kids.push(new D.Paragraph({children:[run(label+' ',true),run(valor||'')]}))}
+    else{kids.push(new D.Paragraph({spacing:{after:80},children:[run(label,true)]}));linhas(valor).forEach(l=>kids.push(new D.Paragraph({spacing:{after:40},children:[run(l)]})))}
+    return new D.TableCell({width:{size:w,type:D.WidthType.DXA},borders:BOX,margins:{top:140,bottom:140,left:180,right:180},verticalAlign:inline?D.VerticalAlign.CENTER:D.VerticalAlign.TOP,children:kids});
+  }
+  const gap=w=>new D.TableCell({width:{size:w,type:D.WidthType.DXA},borders:NONE,children:[new D.Paragraph('')]});
+  function linha(cols,altura){
+    const cells=[],widths=[];
+    cols.forEach((c,i)=>{if(i){cells.push(gap(238));widths.push(238)}cells.push(cel(c[0],c[1],c[2],c[3]));widths.push(c[0])});
+    return new D.Table({width:{size:W,type:D.WidthType.DXA},columnWidths:widths,borders:{top:N,bottom:N,left:N,right:N,insideHorizontal:N,insideVertical:N},rows:[new D.TableRow({height:{value:altura,rule:D.HeightRule.ATLEAST},children:cells})]});
+  }
+  const esp=()=>new D.Paragraph({spacing:{before:0,after:0},children:[new D.TextRun({text:'',size:16})]});
+  const meia=(W-238)/2,terco=(W-476)/3;
+  return {properties:{page:{size:{width:11906,height:16838},margin:{top:720,bottom:720,left:720,right:720}}},children:[
+      new D.Paragraph({alignment:D.AlignmentType.CENTER,spacing:{before:120,after:300},children:[new D.TextRun({text:'PLANO DE AULA',bold:true,font:'Arial Black',size:48})]}),
+      linha([[terco,'Série:',p.serie,true],[terco,'Disciplina:',p.disciplina,true],[terco,'Data:',p.data,true]],620),esp(),
+      linha([[meia,'Tópico:',p.topico,true],[meia,'Aula nº',p.aula,true]],620),esp(),
+      linha([[W,'Foco e objetivos da aula:',p.foco]],1700),esp(),
+      linha([[meia,'Materiais necessários:',p.materiais],[meia,'Objetivos de aprendizagem:',p.objetivos]],1750),esp(),
+      linha([[W,'Estrutura / Atividade:',p.estrutura]],5300),esp(),
+      linha([[W,'Avaliação:',p.avaliacao]],2650)
+    ]};
+}
+function montarPlanosDoc(D,L){return new D.Document({styles:{default:{document:{run:{font:'Arial',size:22}}}},sections:L.map(p=>planoSecao(D,p))})}
+function montarPlanoDoc(D,p){return montarPlanosDoc(D,[p])}
+
+const PC=[['serie','Série','Turma da aula',0,1],['disciplina','Disciplina','',0,1],['data','Data','',0,1],['topico','Tópico','Assunto da aula',0,1],['aula','Aula nº','Número da aula nesta turma',0,1],['foco','Foco e objetivos da aula','O que essa aula vai trabalhar',1],['materiais','Materiais necessários','Toque para marcar os recursos da aula',1],['objetivos','Objetivos de aprendizagem','Escreva seus objetivos e/ou selecione habilidades da BNCC abaixo',1],['estrutura','Estrutura / Atividade','Passo a passo da aula, um passo por linha',1],['avaliacao','Avaliação','Como você vai avaliar',1]];
+let P=null,pq=0,pkey=null,pinfo=null;
+function abrirPlano(){
+  const a=aberta,i=S.aulas[a.key]||{},el=document.getElementById('m_as');
+  pkey=a.key;pinfo={assunto:el?el.value.trim():i.assunto||'',obs:(document.getElementById('m_ob')||{}).value||i.obs||'',feita:(document.getElementById('m_ok')||{}).checked||!!i.feita};
+  P=i.plano?Object.assign({},i.plano):{serie:a.turma,disciplina:a.comp,data:fmtA(a.data),topico:pinfo.assunto,aula:String(IDX[a.key]||''),foco:'',materiais:'',objetivos:'',estrutura:'',avaliacao:''};
+  pq=i.plano?-1:0;planoTela()}
+function planoTela(){
+  if(pq<0)return verificar();
+  const[k,l,h,big]=PC[pq];
+  abrirSheet(`<div class="prog"><div style="width:${(pq+1)/PC.length*100}%"></div></div><div class="stepn">Pergunta ${pq+1} de ${PC.length} · Plano de aula</div>
+<h2 style="margin-top:10px">${l}</h2>${h?`<p class="hint">${h}</p>`:''}
+${k==='materiais'?stMat():k==='objetivos'?stObj():big?`<textarea id="pq" style="min-height:150px">${esc(P[k])}</textarea>`:(k==='serie'||k==='disciplina')?`<select id="pq">${((L=>L.includes(P[k])||!P[k]?L:[P[k],...L])(k==='serie'?S.turmas:S.prof.discs)).map(t=>`<option ${t===P[k]?'selected':''}>${esc(t)}</option>`).join('')}</select>`:`<input id="pq" value="${esc(P[k])}">`}
+<div class="wnav"><button class="btn sec" onclick="pNav(-1)">${pq?'Voltar':'Sair'}</button>${pq<PC.length-1?'<button class="btn" onclick="pNav(1)">Próximo</button>':'<button class="btn" onclick="pNav(1)">Verificar plano</button>'}</div>
+${pq<PC.length-1?'<button class="link" style="width:100%" onclick="pGuarda();verificar()">Pular para verificar plano</button>':''}`);
+  if(k==='objetivos')hList();if(k==='materiais'){filtMat();const mb=document.getElementById('mb');if(matBusca){mb.focus();mb.setSelectionRange(mb.value.length,mb.value.length)}}const f=document.getElementById('pq');if(f&&!big)f.addEventListener('keydown',e=>{if(e.key==='Enter')pNav(1)});}
+let BNCC={},BT={T:{},K:{}};
+(async()=>{try{const[a,b]=await Promise.all([fetch('bncc.json').then(r=>r.json()),fetch('bncc-temas.json').then(r=>r.json())]);BNCC=a;BT=b;BTOK=null;hList()}catch(e){}})();
+let hTema='';
+function temasDe(t){const x=' '+semAc(String(t||'')).replace(/[^a-z0-9, -]/g,' ')+' ';const out=[];for(const cc in BT.T)for(const lab in BT.T[cc]){if(BT.T[cc][lab].some(r=>x.includes(' '+r)))out.push([cc,lab])}return out}
+const COMPS={CI:'Ciências',MA:'Matemática',LP:'Língua Portuguesa',HI:'História',GE:'Geografia',LI:'Inglês',AR:'Arte',EF:'Educação Física',ER:'Ensino Religioso'};
+function compCod(d){const x=semAc(d||'');if(/cienc|ambiental/.test(x))return'CI';if(/matem/.test(x))return'MA';if(/portug/.test(x))return'LP';if(/hist/.test(x))return'HI';if(/geog/.test(x))return'GE';if(/ingl/.test(x))return'LI';if(/^arte/.test(x))return'AR';if(/fisica/.test(x))return'EF';if(/relig/.test(x))return'ER';return''}
+function anoTurma(t){const m=String(t||'').match(/(\d)\s*[º°o]/);return m?+m[1]:0}
+function anoOk(c,y){const a=+c[2],b=+c[3];return a===0?b===y:(y>=a&&y<=b)}
+let hBusca='',hTodos=false;
+function stObj(){return`<textarea id="pq" style="min-height:90px" placeholder="Seus objetivos (opcional)">${esc(P.objetivos)}</textarea>
+<label class="f">Habilidades da BNCC</label>
+<input id="hb" placeholder="🔍 Procurar por código ou palavra (ex.: EF06CI05, célula)" value="${esc(hBusca)}" oninput="hBusca=this.value;hList()">
+<label class="ck"><input type="checkbox" ${hTodos?'checked':''} onchange="hTodos=this.checked;hList()"> Mostrar de todos os anos e componentes</label>
+<div id="htemas"></div><div id="hsug"></div><div id="hsel" class="hint"></div><div id="hlist" style="max-height:48vh;overflow:auto"></div>`}
+const STOP=new Set('rapida rapido breve pequena simples introdutoria nova novo primeira segunda geral basica basico a o e as os de da do das dos em no na nos nas um uma uns umas para por com sem sobre entre que como seu sua seus suas aula aulas tema era estudo estudar conhecer introducao revisao parte atividade alunos turma ano anos'.split(' '));
+function toks(t){return[...new Set(semAc(String(t||'')).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>=3&&!STOP.has(w)))]}
+const raiz=w=>w.length>5?w.slice(0,w.length-2):w;
+let BTOK=null;
+const SIN={zoolog:'animais vertebrados invertebrados fauna',botanic:'plantas vegetais flora',ecolog:'ecossistemas cadeia alimentar seres vivos',astronom:'sistema solar planetas astros universo',anatom:'corpo humano sistemas',fisiolog:'corpo humano sistemas',citolog:'celulas',microbiolog:'microrganismos',geolog:'rochas solo camadas',meteorolog:'clima atmosfera',paleontolog:'fosseis',quimic:'transformacoes quimicas substancias',fisic:'energia movimento forca',sexualid:'reproducao puberdade',saud:'saude doencas'};
+function expandir(t){let x=semAc(String(t||''));for(const k in SIN)if(x.includes(k))x+=' '+SIN[k];return x}
+function sugerirHab(){
+  if(!BTOK){BTOK={};for(const c in BNCC)BTOK[c]=toks(BNCC[c])}
+  const N=Object.keys(BTOK).length,idf=r=>{let d=0;for(const c in BTOK)if(BTOK[c].some(t=>t.startsWith(r)))d++;return d?Math.log(N/d):0};
+  const q=[...toks(expandir(P.topico)).map(w=>[raiz(w),3]),...toks(expandir(P.foco)).map(w=>[raiz(w),1])].map(([r,w])=>[r,w*idf(r)]);if(!q.length&&!P.topico)return[];
+  const y=anoTurma(P.serie),cc=compCod(P.disciplina),out=[];const TM=temasDe(expandir((P.topico||'')+' '+(P.foco||'')));
+  for(const c in BTOK){if(cc&&c.slice(4,6)!==cc)continue;let sc=0,hit=0;const tg=BT.K[c]||[];TM.forEach(([k,l])=>{if(c.slice(4,6)===k&&tg.includes(l)){sc+=25;hit++}});const T=BTOK[c];for(const[r,w]of q){if(T.some(t=>t.startsWith(r))){sc+=w;hit++}}if(!sc)continue;
+    if(hit>1)sc*=1.5;const mc=cc&&c.slice(4,6)===cc,my=y&&anoOk(c,y);if(mc)sc*=2;if(my)sc*=1.6;out.push([c,sc,mc,my])}
+  out.sort((a,b)=>b[1]-a[1]);const top=out.length?out[0][1]:0;return out.filter(x=>x[1]>=top*0.4&&x[1]>=12).slice(0,6)}
+function tagsH(c){const t=BT.K[c]||[];return t.length?`<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">${t.map(x=>`<span class="tag">🏷 ${esc(x)}</span>`).join('')}</div>`:''}
+function hList(){const box=document.getElementById('hlist');if(!box)return;if(!Object.keys(BNCC).length){box.innerHTML='<p class="hint">Carregando a BNCC… se não aparecer, verifique a internet.</p>';return}const sel=P.hab||[];
+  const sg=document.getElementById('hsug');if(sg){const L=sugerirHab();sg.innerHTML=L.length?`<div class="box" style="background:#fffbea;border-color:#f6c343"><b>💡 Sugestões para "${esc(P.topico||P.foco)}"</b>${L.map(([c,,mc,my])=>`<div class="card" style="--c:${sel.includes(c)?'#1b8a3a':'#f6c343'};margin-top:6px;${sel.includes(c)?'background:#e8f5ec':''}" onclick="togHab('${c}')"><div class="ct"><b style="font-size:13px">${sel.includes(c)?'✓ ':''}${c}</b><span class="num">${COMPS[c.slice(4,6)]||''}${my?'':' · outro ano'}</span></div><div class="as" style="font-size:13px">${esc(BNCC[c])}</div>${tagsH(c)}</div>`).join('')}</div>`:(P.topico?'<p class="hint">💡 Nenhuma sugestão certeira para esse tópico. Use os temas ou a busca abaixo.</p>':'<p class="hint">💡 Preencha o Tópico da aula para receber sugestões de habilidades.</p>')}
+  const y=anoTurma(P.serie),cc=compCod(P.disciplina),q=semAc(hBusca.trim());
+  let ks=Object.keys(BNCC).filter(c=>{if(!hTodos){if(y&&!anoOk(c,y))return false;if(cc&&c.slice(4,6)!==cc)return false}if(hTema&&!(BT.K[c]||[]).includes(hTema))return false;return!q||semAc(c+' '+BNCC[c]+' '+(BT.K[c]||[]).join(' ')).includes(q)});
+  ks.sort((a,b)=>(sel.includes(b)-sel.includes(a))||(a<b?-1:1));
+  const tot=ks.length;ks=ks.slice(0,150);
+  const ht=document.getElementById('htemas');if(ht){const cods=hTodos||!cc?Object.keys(BT.T):[cc];ht.innerHTML=`<div class="hint" style="margin:4px 0">Temas${!hTodos&&cc?' de '+COMPS[cc]:''}:</div><div class="chips" style="margin-top:0;max-height:110px;overflow:auto">${cods.flatMap(k=>Object.keys(BT.T[k]||{})).filter((v,i,a)=>a.indexOf(v)===i).map(l=>`<button class="tab ${hTema===l?'on':''}" style="flex:0 0 auto;font-size:12px;padding:6px 9px" onclick="hTema=hTema===this.dataset.l?'':this.dataset.l;hList()" data-l="${esc(l)}">${esc(l)}</button>`).join('')}</div>`}
+  document.getElementById('hsel').innerHTML=(sel.length?`<b>${sel.length}</b> selecionada(s): ${sel.join(', ')} · `:'')+`${tot} encontrada(s)${y&&!hTodos?' para o '+y+'º ano':''}${cc&&!hTodos?' em '+COMPS[cc]:''}`;
+  box.innerHTML=ks.map(c=>`<div class="card" style="--c:${sel.includes(c)?'#1b8a3a':'#cfd8d2'};${sel.includes(c)?'background:#e8f5ec':''}" onclick="togHab('${c}')"><div class="ct"><b style="font-size:13px">${sel.includes(c)?'✓ ':''}${c}</b><span class="num">${COMPS[c.slice(4,6)]||''}</span></div><div class="as" style="font-size:13px">${esc(BNCC[c])}</div>${tagsH(c)}</div>`).join('')+(tot>150?'<p class="hint">Mostrando 150. Refine a busca para ver mais.</p>':'')+(tot?'':'<p class="hint">Nenhuma habilidade encontrada.</p>')}
+function togHab(c){const f=document.getElementById('pq');if(f)P.objetivos=f.value;const s=P.hab||[];P.hab=s.includes(c)?s.filter(x=>x!==c):[...s,c];hList()}
+function pFinal(){const o=Object.assign({},P);const hs=(P.hab||[]).map(c=>'('+c+') '+(BNCC[c]||''));o.objetivos=[P.objetivos,...hs].filter(x=>String(x||'').trim()).join('\n');return o}
+const MATS=["Pincel", "Quadro", "Livro", "Projetor", "Notebook", "Quadro branco", "Quadro negro", "Giz", "Apagador", "Pincel atômico", "Pincel de quadro (cores)", "Livro didático", "Caderno", "Lápis", "Caneta", "Borracha", "Apontador", "Régua", "Esquadro", "Transferidor", "Compasso", "Calculadora", "Data show", "Tela de projeção", "Computador", "Tablet", "Celular", "Internet", "Wi-Fi", "Caixa de som", "Microfone", "TV", "Cabo HDMI", "Extensão elétrica", "Pen drive", "Slides", "Vídeo", "Documentário", "Podcast", "Música", "Aplicativo", "Jogo digital", "Simulador (PhET)", "Google Earth", "Plataforma digital", "Formulário online", "Kahoot", "Mapa conceitual", "Atividade impressa", "Folha de exercícios", "Avaliação impressa", "Apostila", "Texto de apoio", "Questionário", "Ficha de observação", "Roteiro de experimento", "Revista", "Jornal", "Dicionário", "Atlas", "Mapa", "Globo terrestre", "Cartaz", "Banner", "Imagens impressas", "Fotografias", "Gráficos", "Tabela periódica", "Infográfico", "Papel A4", "Papel sulfite", "Papel colorido", "Papel cartão", "Papel pardo", "Papel crepom", "Papel milimetrado", "Cartolina", "EVA", "TNT", "Isopor", "Papelão", "Lápis de cor", "Giz de cera", "Canetinha", "Marca-texto", "Tinta guache", "Pincel de pintura", "Cola", "Cola quente", "Tesoura", "Fita adesiva", "Fita crepe", "Barbante", "Grampeador", "Clips", "Alfinete", "Massinha de modelar", "Palitos de picolé", "Palito de dente", "Canudos", "Copos descartáveis", "Pratos descartáveis", "Garrafa PET", "Material reciclável", "Tampinhas", "Rolo de papel higiênico", "Elástico", "Bexiga (balão)", "Dado", "Cartas/fichas", "Jogo de tabuleiro", "Quebra-cabeça", "Bola", "Cones", "Cronômetro", "Apito", "Lupa", "Microscópio", "Lâminas e lamínulas", "Placa de Petri", "Tubo de ensaio", "Béquer", "Proveta", "Erlenmeyer", "Funil", "Papel filtro", "Conta-gotas", "Pipeta", "Pinça", "Bisturi", "Termômetro", "Balança", "Fita métrica", "Bússola", "Ímã", "Pilha", "Lâmpada", "Fios elétricos", "Lanterna", "Espelho", "Prisma", "Lente", "Vela", "Fósforo", "Lamparina", "Água", "Sal", "Açúcar", "Vinagre", "Bicarbonato de sódio", "Óleo", "Corante alimentício", "Detergente", "Álcool", "Iodo", "Repolho roxo", "Sementes", "Terra/solo", "Areia", "Pedras/rochas", "Vaso", "Plantas", "Folhas", "Flores", "Algodão", "Copo de vidro", "Pote com tampa", "Saco plástico", "Luvas", "Máscara", "Jaleco", "Óculos de proteção", "Material de experimento", "Maquete", "Modelo anatômico", "Esqueleto", "Torso humano", "Coleção de insetos", "Herbário", "Horta escolar", "Kit de robótica", "Arduino", "Sensores", "Sala de aula", "Laboratório de ciências", "Laboratório de informática", "Biblioteca", "Pátio", "Quadra", "Auditório", "Área verde", "Horta", "Aula de campo", "Visita técnica", "Palestrante convidado"];
+let matBusca='';
+function matSel(){return String(P.materiais||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean)}
+const semAc=t=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function stMat(){const sel=matSel(),todos=[...MATS,...sel.filter(x=>!MATS.includes(x))];
+  return`<input id="mb" placeholder="🔍 Procurar ou digitar um material" value="${esc(matBusca)}" oninput="matBusca=this.value;filtMat()" onkeydown="if(event.key==='Enter')addMat()">
+<div class="hint" style="margin:6px 0 0">${sel.length?`<b>${sel.length}</b> selecionado(s): ${esc(sel.join(', '))}`:'Nenhum selecionado ainda.'}</div>
+<button class="btn sm" id="madd" style="display:none;margin-top:8px" onclick="addMat()"></button>
+<div class="chips" id="mlist" style="margin-top:8px;max-height:46vh;overflow:auto">${todos.map((m,i)=>`<button class="tab ${sel.includes(m)?'on':''}" data-n="${esc(semAc(m))}" style="flex:0 0 auto" onclick="togMat('${i}')">${sel.includes(m)?'✓ ':''}${esc(m)}</button>`).join('')}</div>`}
+function filtMat(){const q=semAc(matBusca.trim());let n=0;document.querySelectorAll('#mlist .tab').forEach(b=>{const ok=!q||b.dataset.n.includes(q);b.style.display=ok?'':'none';if(ok)n++});
+  const ad=document.getElementById('madd'),ex=[...MATS,...matSel()].some(m=>semAc(m)===q);if(q&&!ex){ad.style.display='inline-block';ad.textContent='+ Adicionar "'+matBusca.trim()+'"'}else ad.style.display='none'}
+function togMat(i){const sel=matSel(),todos=[...MATS,...sel.filter(x=>!MATS.includes(x))],m=todos[+i];P.materiais=(sel.includes(m)?sel.filter(x=>x!==m):[...sel,m]).join('\n');planoTela()}
+function addMat(){const v=matBusca.trim();if(!v)return;const q=semAc(v);const hit=MATS.find(m=>semAc(m)===q)||v;const sel=matSel();if(!sel.includes(hit))sel.push(hit);P.materiais=sel.join('\n');matBusca='';planoTela()}
+function pGuarda(){const f=document.getElementById('pq');if(f&&pq>=0)P[PC[pq][0]]=f.value}
+function pNav(n){pGuarda();if(pq===0&&n<0){fechar();return abrir(pkey)}pq+=n;if(pq>=PC.length)return verificar();planoTela()}
+function verificar(){
+  pq=-1;
+  const PF=pFinal();const bx=(k,l,inl)=>{const i=PC.findIndex(c=>c[0]===k),v=PF[k]||'';return`<div class="b ${inl?'i':''} ${v.trim()?'':'vz'}" onclick="pq=${i};planoTela()"><b>${l}</b> ${v.trim()?esc(v):'(vazio — toque para preencher)'}</div>`};
+  abrirSheet(`<h2>Verificar plano</h2><p class="hint">Confira tudo. Toque em qualquer campo para corrigir.</p>
+<div class="pv"><h1>PLANO DE AULA</h1>
+<div class="pr" style="grid-template-columns:1fr 1fr 1fr">${bx('serie','Série:',1)}${bx('disciplina','Disciplina:',1)}${bx('data','Data:',1)}</div>
+<div class="pr" style="grid-template-columns:1fr 1fr">${bx('topico','Tópico:',1)}${bx('aula','Aula nº',1)}</div>
+<div class="pr">${bx('foco','Foco e objetivos da aula:')}</div>
+<div class="pr" style="grid-template-columns:1fr 1fr">${bx('materiais','Materiais necessários:')}${bx('objetivos','Objetivos de aprendizagem:')}</div>
+<div class="pr">${bx('estrutura','Estrutura / Atividade:')}</div>
+<div class="pr">${bx('avaliacao','Avaliação:')}</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+${DL?'<button class="btn" onclick="baixarPlano()">⬇ Baixar .docx</button>':'<p class="hint">O download do Word funciona ao abrir o app pelo claude.ai.</p>'}
+<button class="btn sec" onclick="gravarPlano();fechar();toast(\'Plano salvo\')">Salvar e fechar</button>
+<button class="link" onclick="pq=0;planoTela()">Revisar pergunta por pergunta</button></div>`)}
+function gravarPlano(){const cur=S.aulas[pkey]||{};S.aulas[pkey]=Object.assign({},cur,pinfo,{plano:Object.assign({},P)});if(!S.aulas[pkey].assunto&&P.topico)S.aulas[pkey].assunto=P.topico;salvar(true);render()}
+async function baixarPlano(){
+  if(!window.docx||typeof montarPlanoDoc!=='function'){toast('Gerador de Word não carregou. Verifique a internet.');return}
+  let blob;try{blob=await docx.Packer.toBlob(montarPlanoDoc(docx,pFinal()))}catch(e){toast('Erro ao gerar o Word');return}
+  const nome=('Plano_'+(P.serie||'')+'_'+(P.data||'')).replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_')+'.docx';
+  try{await DL.save({filename:nome,data:blob});toast('Plano baixado')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}
+  gravarPlano()}
+
+function render(){if(modo==='wizard'){document.getElementById('tb').style.display='none';renderWizard()}else renderApp()}
+render();
+</script>
+</body>
+</html>
