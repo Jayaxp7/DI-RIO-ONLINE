@@ -88,7 +88,8 @@ nav.tb button.on{color:var(--g);font-weight:700}
 .cfg h3{font-size:16px;margin:0}.cfg .hint{margin:0}
 .opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer}
 .opt.on{border-color:var(--g);background:#eef7f0}.opt input{width:auto;margin-top:3px}
-.opt span{display:flex;flex-direction:column}.opt small{color:var(--mu);font-size:13px}
+.opt span{display:flex;flex-direction:column}
+.passos{margin:6px 0 12px;padding-left:20px;line-height:1.5;font-size:15px}.passos li{margin-bottom:6px}.opt small{color:var(--mu);font-size:13px}
 .as.vazio{color:var(--g);font-weight:600;font-size:13px}
 .mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
 .mh{text-align:center;font-size:12px;font-weight:700;color:var(--mu)}
@@ -379,7 +380,7 @@ function diaBloco(d,inf){let h=`<div class="day ${d===TODAY?'today':''}"><div cl
   else h+=(inf.tipo==='extra'?`<div class="hint">${esc(inf.nome)}</div>`:'')+inf.aulas.map(a=>card(a)).join('');
   return h+'</div>'}
 function vSemana(){
-  let h=`<div class="nav"><button onclick="mvW(-7)">‹</button><b>${fmt(iso(weekStart))} a ${fmt(iso(addD(weekStart,5)))}</b><button onclick="mvW(7)">›</button></div><div style="display:flex;justify-content:space-between;align-items:center"><button class="link" onclick="resetNav();saveUI();render()">Ir para hoje</button>${DL?'<button class="link" onclick="baixarSemana()">⬇ Planos da semana (.'+fmtPlano()+')</button>':''}</div>`;
+  let h=`<div class="nav"><button onclick="mvW(-7)">‹</button><b>${fmt(iso(weekStart))} a ${fmt(iso(addD(weekStart,5)))}</b><button onclick="mvW(7)">›</button></div><div style="display:flex;justify-content:space-between;align-items:center"><button class="link" onclick="resetNav();saveUI();render()">Ir para hoje</button>${GDOCS?'<button class="link" onclick="gDocsSemana()">📄 Planos da semana no Google Docs</button>':DL?'<button class="link" onclick="baixarSemana()">⬇ Planos da semana (.docx)</button>':''}</div>`;
   const dias=[];for(let i=0;i<6;i++){const d=iso(addD(weekStart,i));const inf=diaInfo(d);if(i===5&&inf.tipo!=='extra')continue;dias.push([d,inf])}
   h+='<div class="wk">'+dias.map(([d,inf])=>diaBloco(d,inf)).join('')+'</div>';
   const usados=S.slots.filter(s=>dias.some(([,inf])=>inf.aulas.some(a=>a.slot.id===s.id)));
@@ -425,13 +426,8 @@ ${(()=>{const av=all.filter(x=>x.info.aval);if(!av.length)return'<div class="off
 ${DL?'<button class="btn" onclick="baixarCSV()">⬇ Baixar planilha do ano (.csv)</button>':''}
 <button class="btn sec" onclick="copiarCSV()">Copiar planilha do ano</button>
 </div>`}
-function fmtPlano(){return(S.cfg&&S.cfg.formato)==='doc'?'doc':'docx'}
-function setFmt(v){S.cfg=Object.assign({},S.cfg,{formato:v});salvar();render();toast(v==='doc'?'Planos serão salvos em .doc':'Planos serão salvos em .docx')}
-function vConfig(){const f=fmtPlano();
+function vConfig(){
   return`<h2>Configurações</h2>
-<div class="cfg"><h3>📝 Formato do plano de aula</h3><p class="hint">Como o arquivo do plano é salvo quando você baixa.</p>
-<label class="opt ${f==='docx'?'on':''}"><input type="radio" name="fmt" ${f==='docx'?'checked':''} onchange="setFmt('docx')"><span><b>Word (.docx)</b><small>Padrão. Abre no Word, Google Docs e WPS.</small></span></label>
-<label class="opt ${f==='doc'?'on':''}"><input type="radio" name="fmt" ${f==='doc'?'checked':''} onchange="setFmt('doc')"><span><b>Documento (.doc)</b><small>Arquivo mais simples, para celulares e programas que não abrem .docx.</small></span></label></div>
 <div class="cfg"><h3>🏫 Turmas, horários e feriados</h3><p class="hint">${esc(S.turmas.join(', '))} · ${porSemana()} aulas por semana · ${fmtA(S.ano.ini)} a ${fmtA(S.ano.fim)}</p>
 <button class="btn" onclick="modo='wizard';step=0;render()">✏️ Editar turmas, grade e feriados</button></div>
 <div class="cfg"><h3>💾 Backup</h3><p class="hint">Guarda tudo: configuração, grade, feriados, assuntos, planos e avaliações. Baixe de vez em quando e guarde o arquivo.</p>
@@ -515,10 +511,10 @@ function copiarPlano(from,to,ok){const[d,sid]=to.split('|');const a=diaInfo(d,tr
 async function baixarSemana(){
   const L=[];for(let i=0;i<6;i++){diaInfo(iso(addD(weekStart,i))).aulas.forEach(a=>{if(a.info.plano)L.push(a)})}
   if(!L.length){toast('Nenhum plano feito nesta semana');return}
-  if(fmtPlano()==='docx'&&!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
+  if(!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
   const ps=L.map(a=>{P=Object.assign({},a.info.plano);return pFinal()});
   let blob;try{blob=await gerarArquivoPlanos(ps)}catch(e){toast('Erro ao gerar o Word');return}
-  try{await DL.save({filename:'Planos_semana_'+fmt(iso(weekStart)).replace('/','-')+'_a_'+fmt(iso(addD(weekStart,5))).replace('/','-')+'.'+fmtPlano(),data:blob});toast(L.length+' plano(s) baixados')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}}
+  try{await DL.save({filename:'Planos_semana_'+fmt(iso(weekStart)).replace('/','-')+'_a_'+fmt(iso(addD(weekStart,5))).replace('/','-')+'.docx',data:blob});toast(L.length+' plano(s) baixados')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}}
 
 /* ---------- plano de aula ---------- */
 function planoSecao(D,p){
@@ -553,19 +549,7 @@ function planoSecao(D,p){
 }
 function montarPlanosDoc(D,L){return new D.Document({styles:{default:{document:{run:{font:'Arial',size:22}}}},sections:L.map(p=>planoSecao(D,p))})}
 function montarPlanoDoc(D,p){return montarPlanosDoc(D,[p])}
-function planoHTML(p,quebra){p=p||{};const e=t=>esc(String(t||'')).replace(/\r?\n/g,'<br>');
-  const c=(l,v,inl,w)=>`<td width="${w}%" valign="${inl?'middle':'top'}" style="border:1px solid #000;padding:7pt 9pt;vertical-align:${inl?'middle':'top'}">${inl?`<b>${l}</b> ${e(v)}`:`<p style="margin:0 0 4pt"><b>${l}</b></p>${e(v)}`}</td>`;
-  const t=(hg,cells)=>`<table width="100%" cellspacing="8" cellpadding="0" style="border-collapse:separate;margin:0 -8pt"><tr style="height:${hg}pt" height="${Math.round(hg*4/3)}">${cells}</tr></table>`;
-  return`${quebra?'<br clear="all" style="page-break-before:always">':''}<p align="center" style="font-family:'Arial Black';font-size:24pt;font-weight:bold;margin:6pt 0 12pt">PLANO DE AULA</p>
-${t(31,c('Série:',p.serie,1,33)+c('Disciplina:',p.disciplina,1,33)+c('Data:',p.data,1,34))}
-${t(31,c('Tópico:',p.topico,1,50)+c('Aula nº',p.aula,1,50))}
-${t(85,c('Foco e objetivos da aula:',p.foco,0,100))}
-${t(87,c('Materiais necessários:',p.materiais,0,50)+c('Objetivos de aprendizagem:',p.objetivos,0,50))}
-${t(255,c('Estrutura / Atividade:',p.estrutura,0,100))}
-${t(125,c('Avaliação:',p.avaliacao,0,100))}`}
-function montarDocHTML(L){return'﻿<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Plano de Aula</title><style>@page{size:21cm 29.7cm;margin:1.27cm}body{font-family:Arial;font-size:11pt}td{font-family:Arial;font-size:11pt}</style></head><body>'+L.map((p,i)=>planoHTML(p,i>0)).join('')+'</body></html>'}
-async function gerarArquivoPlanos(L){if(fmtPlano()==='doc')return new Blob([montarDocHTML(L)],{type:'application/msword'});
-  if(!window.docx)throw new Error('sem docx');return docx.Packer.toBlob(montarPlanosDoc(docx,L))}
+async function gerarArquivoPlanos(L){  if(!window.docx)throw new Error('sem docx');return docx.Packer.toBlob(montarPlanosDoc(docx,L))}
 
 
 const PC=[['serie','Série','Turma da aula',0,1],['disciplina','Disciplina','',0,1],['data','Data','',0,1],['topico','Tópico','Assunto da aula',0,1],['aula','Aula nº','Número da aula nesta turma',0,1],['foco','Foco e objetivos da aula','O que essa aula vai trabalhar',1],['materiais','Materiais necessários','Toque para marcar os recursos da aula',1],['objetivos','Objetivos de aprendizagem','Escreva seus objetivos e/ou selecione habilidades da BNCC abaixo',1],['estrutura','Estrutura / Atividade','Passo a passo da aula, um passo por linha',1],['avaliacao','Avaliação','Como você vai avaliar',1]];
@@ -651,17 +635,37 @@ function verificar(){
 <div class="pr">${bx('estrutura','Estrutura / Atividade:')}</div>
 <div class="pr">${bx('avaliacao','Avaliação:')}</div></div>
 <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-${DL?'<button class="btn" onclick="baixarPlano()">⬇ Baixar .'+fmtPlano()+'</button>':'<p class="hint">O download do Word funciona ao abrir o app pelo claude.ai.</p>'}
+${GDOCS?'<button class="btn" onclick="gDocsPlano()">📄 Abrir no Google Docs</button>':''}${DL?(GDOCS?'<button class="link" onclick="baixarPlano()">ou baixar o arquivo .docx</button>':'<button class="btn" onclick="baixarPlano()">⬇ Baixar .docx</button>'):(GDOCS?'':'<p class="hint">O download do Word funciona ao abrir o app pelo claude.ai.</p>')}
 <button class="btn sec" onclick="gravarPlano();fechar();toast(\'Plano salvo\')">Salvar e fechar</button>
 <button class="link" onclick="pq=0;planoTela()">Revisar pergunta por pergunta</button></div>`)}
 function gravarPlano(){const cur=S.aulas[pkey]||{};S.aulas[pkey]=Object.assign({},cur,pinfo,{plano:Object.assign({},P)});if(!S.aulas[pkey].assunto&&P.topico)S.aulas[pkey].assunto=P.topico;salvar(true);render()}
 async function baixarPlano(){
-  if(fmtPlano()==='docx'&&!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
+  if(!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
   let blob;try{blob=await gerarArquivoPlanos([pFinal()])}catch(e){toast('Erro ao gerar o Word');return}
-  const nome=('Plano_'+(P.serie||'')+'_'+(P.data||'')).replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_')+'.'+fmtPlano();
+  const nome=('Plano_'+(P.serie||'')+'_'+(P.data||'')).replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_')+'.docx';
   try{await DL.save({filename:nome,data:blob});toast('Plano baixado')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}
   gravarPlano()}
 
+/* ---------- Google Docs ---------- */
+const GDOCS=!window.claude;
+const DOCX='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+async function gDocs(L,nome){
+  if(!window.docx){toast('Gerador de Word não carregou. Verifique a internet.');return}
+  const cel=matchMedia('(pointer:coarse)').matches&&!!navigator.canShare;
+  const w=cel?null:window.open('https://docs.google.com/document/u/0/','_blank');
+  let blob;try{blob=await gerarArquivoPlanos(L)}catch(e){if(w)w.close();toast('Erro ao gerar o Word');return}
+  const arq=nome.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_')+'.docx';
+  if(cel){const f=new File([blob],arq,{type:DOCX});
+    if(navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:arq});return}catch(e){if(e&&e.name==='AbortError')return}}
+    try{await DL.save({filename:arq,data:blob});toast('Plano baixado. Abra pelo app do Google Docs.')}catch(e){toast('Não foi possível baixar aqui')}return}
+  try{await DL.save({filename:arq,data:blob})}catch(e){toast('Não foi possível baixar aqui');return}
+  abrirSheet(`<h2>Quase lá 📄</h2><p class="hint">O plano foi baixado como <b>${esc(arq)}</b> e o Google Docs abriu em outra aba.</p>
+<ol class="passos"><li>No Google Docs, clique no ícone de <b>pasta 📁</b> (Abrir seletor de arquivos).</li><li>Clique em <b>Fazer upload</b> e escolha o arquivo baixado.</li><li>Pronto: o plano abre no Google Docs para editar ou baixar.</li></ol>
+${w?'':'<a class="btn" style="display:block;text-align:center;text-decoration:none" href="https://docs.google.com/document/u/0/" target="_blank" rel="noopener">Abrir o Google Docs</a>'}
+<button class="btn sec" onclick="fechar()">Entendi</button>`)}
+function nomeSemana(){return'Planos_semana_'+fmt(iso(weekStart)).replace('/','-')+'_a_'+fmt(iso(addD(weekStart,5))).replace('/','-')}
+function gDocsPlano(){const p=pFinal(),n='Plano_'+(P.serie||'')+'_'+(P.data||'');gravarPlano();gDocs([p],n)}
+function gDocsSemana(){const L=[];for(let i=0;i<6;i++){diaInfo(iso(addD(weekStart,i))).aulas.forEach(a=>{if(a.info.plano)L.push(a)})}if(!L.length){toast('Nenhum plano feito nesta semana');return}const ps=L.map(a=>{P=Object.assign({},a.info.plano);return pFinal()});gDocs(ps,nomeSemana())}
 function render(){if(modo==='wizard'){document.getElementById('tb').style.display='none';document.body.classList.remove('temnav');renderWizard()}else renderApp()}
 render();
 </script>
