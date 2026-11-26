@@ -60,7 +60,7 @@ nav.tb button.on{color:var(--g);font-weight:700}
 .nav{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:6px}
 .nav button{background:var(--g2);border:0;border-radius:8px;width:42px;height:38px;font-size:22px;color:var(--g);cursor:pointer}
 .day{margin-top:14px}
-.dh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:6px;text-transform:capitalize}
+.dh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px;margin-bottom:6px}
 .day.today .dh span:first-child{color:var(--g)}
 .day.today .dh span:first-child::after{content:" • hoje";font-size:12px}
 .badge{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;text-transform:none}
@@ -111,7 +111,40 @@ th{background:var(--g2);font-size:12px}
 .pv .b b{display:block}
 .pv .b.i b{display:inline}
 .pv .b.vz{color:#b07d00}
+input,select,textarea{font-size:16px}
+nav.tb{padding-bottom:env(safe-area-inset-bottom)}
+.mc .mt{display:none}
+.wk,.mesw{display:block}
 @media(min-width:700px){main{padding-bottom:100px}}
+@media(min-width:900px){
+  body{font-size:15px}
+  header{padding:16px 28px 14px;position:relative;z-index:6}
+  header .brand{font-size:20px}
+  nav.tb{top:0;bottom:0;right:auto;width:200px;flex-direction:column;border-top:0;border-right:1px solid var(--bd);padding:92px 10px 10px;gap:4px;background:#fff}
+  nav.tb button{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;font-size:15px;text-align:left}
+  nav.tb button b{display:inline;font-size:19px}
+  nav.tb button:hover{background:var(--g2)}
+  nav.tb button.on{background:var(--g2)}
+  body.temnav main{margin-left:200px}
+  main{max-width:1180px;padding:22px 28px 40px}
+  body:not(.temnav) main{max-width:760px}
+  .filt select{max-width:280px}
+  .wk{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:start}
+  .wk .day{margin-top:12px;background:#fbfcfb;border:1px solid var(--bd);border-radius:12px;padding:10px}
+  .mesw{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:20px;align-items:start}
+  .mside .day{margin-top:10px}
+  .mc{min-height:92px;padding:6px}
+  .mc .mt{display:flex;flex-direction:column;gap:2px;margin-top:3px}
+  .mc .mt span{font-size:10px;font-weight:600;color:#fff;background:var(--c);border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card{transition:box-shadow .15s}
+  .card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  .btn:hover{filter:brightness(1.05)}
+  .modal{align-items:center}
+  .sheet{border-radius:16px;max-width:680px;max-height:86vh;padding:22px}
+  .resbtn{display:grid!important;grid-template-columns:1fr 1fr;gap:10px}
+  .resbtn h3,.resbtn p{grid-column:1/-1}
+  table{font-size:15px}
+}
 </style>
 </head>
 <body>
@@ -313,7 +346,7 @@ function renderApp(){
   document.getElementById('sub').textContent=[S.prof.nome,S.prof.discs.join(', '),S.prof.escola].filter(Boolean).join(' · ');
   const filt=view==='resumo'?'':`<div class="filt"><select onchange="filtroTurma=this.value;saveUI();render()"><option value="">Todas as turmas</option>${S.turmas.map(t=>`<option ${t===filtroTurma?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
   app.innerHTML=(view==='resumo'?'':pendencias())+filt+({semana:vSemana,mes:vMes,lista:vLista,resumo:vResumo}[view])();
-  const tb=document.getElementById('tb');tb.style.display='flex';
+  const tb=document.getElementById('tb');tb.style.display='flex';document.body.classList.add('temnav');
   tb.innerHTML=[['semana','🗓','Semana'],['mes','📅','Mês'],['lista','📋','Próximas'],['resumo','📊','Resumo']].map(([v,i,l])=>`<button class="${v===view?'on':''}" onclick="view='${v}';listaModo='';lim=40;saveUI();render();window.scrollTo(0,0)"><b>${i}</b>${l}</button>`).join('');
 }
 function badge(inf){if(inf.tipo==='feriado')return'<span class="badge fer">Feriado</span>';if(inf.tipo==='recesso')return'<span class="badge fer">Recesso</span>';if(inf.tipo==='extra')return'<span class="badge ext">Dia letivo extra</span>';return''}
@@ -326,18 +359,18 @@ function diaBloco(d,inf){let h=`<div class="day ${d===TODAY?'today':''}"><div cl
   return h+'</div>'}
 function vSemana(){
   let h=`<div class="nav"><button onclick="mvW(-7)">‹</button><b>${fmt(iso(weekStart))} a ${fmt(iso(addD(weekStart,5)))}</b><button onclick="mvW(7)">›</button></div><div style="display:flex;justify-content:space-between;align-items:center"><button class="link" onclick="resetNav();saveUI();render()">Ir para hoje</button>${DL?'<button class="link" onclick="baixarSemana()">⬇ Planos da semana (.docx)</button>':''}</div>`;
-  for(let i=0;i<6;i++){const d=iso(addD(weekStart,i));const inf=diaInfo(d);if(i===5&&inf.tipo!=='extra')continue;h+=diaBloco(d,inf)}
-  return h}
+  h+='<div class="wk">';for(let i=0;i<6;i++){const d=iso(addD(weekStart,i));const inf=diaInfo(d);if(i===5&&inf.tipo!=='extra')continue;h+=diaBloco(d,inf)}
+  return h+'</div>'}
 function mvW(n){weekStart=addD(weekStart,n);saveUI();render()}
 function vMes(){
   const y=monthCur.getFullYear(),m=monthCur.getMonth(),first=new Date(y,m,1),start=addD(first,-first.getDay());
-  let h=`<div class="nav"><button onclick="mvM(-1)">‹</button><b>${MESES[m]} ${y}</b><button onclick="mvM(1)">›</button></div><div class="mgrid">${['D','S','T','Q','Q','S','S'].map(x=>`<div class="mh">${x}</div>`).join('')}`;
+  let h=`<div class="mesw"><div><div class="nav"><button onclick="mvM(-1)">‹</button><b>${MESES[m]} ${y}</b><button onclick="mvM(1)">›</button></div><div class="mgrid">${['D','S','T','Q','Q','S','S'].map(x=>`<div class="mh">${x}</div>`).join('')}`;
   const rows=Math.ceil((first.getDay()+new Date(y,m+1,0).getDate())/7);
   for(let i=0;i<rows*7;i++){const dt=addD(start,i),d=iso(dt),inf=diaInfo(d),n=inf.aulas.length,sem=inf.aulas.filter(a=>!a.info.assunto).length;
-    h+=`<div class="mc${dt.getMonth()!==m?' out':''}${d===TODAY?' today':''}${d===selDay?' sel':''}${inf.tipo==='feriado'||inf.tipo==='recesso'?' hol':''}" onclick="selDay='${d}';saveUI();render()"><span>${dt.getDate()}${inf.aulas.some(a=>a.info.aval)?' <b style="color:#c0392b">📌</b>':''}</span>${n?`<i class="${sem?'pend':'full'}">${n}</i>`:''}</div>`}
-  h+=`</div><div class="leg"><span style="--lc:#1b8a3a">com assunto</span><span style="--lc:#f6c343">falta assunto</span><span style="--lc:#fdecea">feriado/recesso</span><span>📌 avaliação</span></div>`;
+    h+=`<div class="mc${dt.getMonth()!==m?' out':''}${d===TODAY?' today':''}${d===selDay?' sel':''}${inf.tipo==='feriado'||inf.tipo==='recesso'?' hol':''}" onclick="selDay='${d}';saveUI();render()"><span>${dt.getDate()}${inf.aulas.some(a=>a.info.aval)?' <b style="color:#c0392b">📌</b>':''}</span><div class="mt">${inf.aulas.slice(0,3).map(a=>`<span style="--c:${cor(a.turma)}${a.info.cancel?';opacity:.45;text-decoration:line-through':''}">${a.slot.ini} ${esc(a.turma)}</span>`).join('')}${n>3?`<span style="--c:#999">+${n-3}</span>`:''}</div>${n?`<i class="${sem?'pend':'full'}">${n}</i>`:''}</div>`}
+  h+=`</div><div class="leg"><span style="--lc:#1b8a3a">com assunto</span><span style="--lc:#f6c343">falta assunto</span><span style="--lc:#fdecea">feriado/recesso</span><span>📌 avaliação</span></div></div><div class="mside">`;
   if(selDay)h+=diaBloco(selDay,diaInfo(selDay));
-  return h}
+  return h+'</div></div>'}
 function mvM(n){monthCur=new Date(monthCur.getFullYear(),monthCur.getMonth()+n,1);saveUI();render()}
 function vLista(){
   if(listaModo){const sp=listaModo==='semplano';let h=`<div class="nav" style="padding:8px 10px"><b>${sp?'Aulas desta semana sem plano':'Aulas passadas sem marcar como dada'}</b><button onclick="listaModo='';render()" style="width:auto;padding:0 10px;font-size:14px">✕</button></div>`,c=0;
@@ -359,7 +392,7 @@ function vResumo(){
 ${(()=>{const av=all.filter(x=>x.info.aval);if(!av.length)return'<div class="off">Nenhuma avaliação marcada. Abra uma aula e escolha o tipo em "Avaliação nesta aula".</div>';const prox=av.filter(x=>x.data>=TODAY),pass=av.filter(x=>x.data<TODAY);return(prox.length?'<div class="hint" style="margin:6px 0">Próximas</div>'+prox.map(card).join(''):'')+(pass.length?'<div class="hint" style="margin:10px 0 6px">Já aplicadas</div>'+pass.map(card).join(''):'')})()}
 <h3 style="font-size:16px;margin-top:20px">Feriados que caem em dia de aula</h3>
 <div class="box">${fer.map(f=>`<div class="fer"><span class="d">${fmt(f.data)} ${DC[pd(f.data).getDay()]}</span><span class="n">${esc(f.nome)}</span></div>`).join('')||'<span class="hint">Nenhum.</span>'}</div>
-<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<div class="resbtn" style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
 ${DL?'<button class="btn" onclick="baixarCSV()">⬇ Baixar planilha do ano (.csv)</button>':''}
 <button class="btn sec" onclick="copiarCSV()">Copiar planilha do ano</button>
 <h3 style="font-size:16px;margin:14px 0 0">💾 Backup</h3><p class="hint" style="margin:0">Guarda tudo: configuração, grade, feriados, assuntos, planos e avaliações.</p>
@@ -392,7 +425,7 @@ function fechar(){document.getElementById('modal').classList.add('hidden')}
 let aberta=null;
 function abrir(key){const[d,sid]=key.split('|');const a=diaInfo(d,true).aulas.find(x=>x.slot.id===sid);if(!a)return;aberta=a;const i=a.info;
   abrirSheet(`<div class="ct"><span class="chip" style="--c:${cor(a.turma)}">${esc(a.turma)}</span><span class="comp">${esc(a.comp)}</span><span class="num">aula ${IDX[key]}/${TOT[a.turma]}</span></div>
-<p style="margin:8px 0 0;font-weight:700;text-transform:capitalize">${fmtLong(d)}</p><p class="hint">${esc(a.slot.label)} · ${a.slot.ini}–${a.slot.fim}</p>
+<p style="margin:8px 0 0;font-weight:700">${fmtLong(d)}</p><p class="hint">${esc(a.slot.label)} · ${a.slot.ini}–${a.slot.fim}</p>
 <label class="f">Assunto do dia</label><textarea id="m_as" placeholder="Ex.: Ciclo da água — evaporação e condensação">${esc(i.assunto)}</textarea>
 <label class="f">Observações (atividade, material, tarefa)</label><textarea id="m_ob" placeholder="Opcional">${esc(i.obs)}</textarea>
 <label class="f">Avaliação nesta aula</label><select id="m_av"><option value="">Nenhuma</option>${AVS.map(x=>`<option ${i.aval===x?'selected':''}>${x}</option>`).join('')}</select>
@@ -578,7 +611,7 @@ async function baixarPlano(){
   try{await DL.save({filename:nome,data:blob});toast('Plano baixado')}catch(e){toast(e&&e.code==='declined'?'Download cancelado':'Não foi possível baixar aqui')}
   gravarPlano()}
 
-function render(){if(modo==='wizard'){document.getElementById('tb').style.display='none';renderWizard()}else renderApp()}
+function render(){if(modo==='wizard'){document.getElementById('tb').style.display='none';document.body.classList.remove('temnav');renderWizard()}else renderApp()}
 render();
 </script>
 </body>
