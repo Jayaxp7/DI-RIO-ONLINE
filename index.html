@@ -341,7 +341,12 @@ function porSemana(){let n=0;for(const d in S.grade)n+=Object.keys(S.grade[d]).l
 
 /* ---------- wizard ---------- */
 const STEPS=[['Sobre você',stProf,vProf],['Ano letivo',stAno,vAno],['Suas turmas',stTurmas,vTurmas],['Horários das aulas',stSlots,vSlots],['Sua semana de aulas',stGrade,vGrade],['Feriados e recessos',stFer,()=>''],['Revisão',stRev,()=>'']];
+let pulouCodigo=false;
+function telaInicio(){return`<h2>Bem-vindo ao Organizador</h2><p class="hint">Sua escola usa o Organizador? Digite o código que a gestão passou e escolha seu nome: suas aulas chegam prontas.</p>
+<div class="box"><b><i class="i i-escola"></i> Tenho o código da escola</b><p class="hint" style="margin:4px 0 10px">Peça o código para a gestão pedagógica.</p><button class="btn" style="width:100%" onclick="telaCodigo()">Digitar código da escola</button></div>
+<button class="btn sec" style="width:100%;margin-top:12px" onclick="pulouCodigo=true;render();window.scrollTo(0,0)">Não tenho código, montar sozinho</button>`}
 function renderWizard(){
+  if(ESCOLA&&!S.setupDone&&!S.escola&&step===0&&!pulouCodigo){app.innerHTML=telaInicio();return}
   const[t,fn]=STEPS[step];
   app.innerHTML=`<div class="prog"><div style="width:${(step+1)/STEPS.length*100}%"></div></div><div class="stepn">Etapa ${step+1} de ${STEPS.length}</div><h2>${t}</h2><div id="err" class="err"></div>${fn()}${step===4&&gmode==='passo'?'':`<div class="wnav">${step?'<button class="btn sec" onclick="prev()">Voltar</button>':(S.setupDone?'<button class="btn sec" onclick="sairWizard()">Cancelar</button>':'<span></span>')}${step<STEPS.length-1?'<button class="btn" onclick="next()">Próximo</button>':'<button class="btn" onclick="concluir()">Montar meu horário</button>'}</div>`}`;
 }
@@ -653,7 +658,7 @@ function colarBackup(){abrirSheet(`<h2>Colar backup</h2><p class="hint">Cole aqu
 function aplicarBackup(){if(!bkPend)return;S=bkPend;bkPend=null;migrar();S.setupDone=true;modo='app';resetNav();view='semana';fechar();salvar(true);render();toast('Backup importado')}
 async function copiarCSV(){try{await navigator.clipboard.writeText(gerarCSV().slice(1));toast('Planilha copiada — cole no Excel/Sheets')}catch(e){toast('Não foi possível copiar')}}
 function confirmarReset(){abrirSheet(`<h2>Apagar tudo?</h2><p>Isso apaga a configuração e todos os assuntos cadastrados. Não dá para desfazer.</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn red" onclick="resetar()">Apagar</button></div>`)}
-function resetar(){S=novo();try{localStorage.removeItem(KEY);sessionStorage.removeItem(UIKEY)}catch(e){}modo='wizard';step=0;fechar();document.getElementById('tb').style.display='none';salvar(true);render()}
+function resetar(){S=novo();pulouCodigo=false;try{localStorage.removeItem(KEY);sessionStorage.removeItem(UIKEY)}catch(e){}modo='wizard';step=0;fechar();document.getElementById('tb').style.display='none';salvar(true);render()}
 
 /* ---------- modal da aula ---------- */
 let gT=null;
