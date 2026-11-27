@@ -5,6 +5,7 @@ const DOCX='https://cdn.jsdelivr.net/npm/docx@9.16.1/dist/index.iife.js';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(BASE).then(()=>c.add(DOCX).catch(()=>{}))));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);
+  if(u.origin===location.origin&&/^\/admin\//i.test(u.pathname))return; // painel da gestão tem o próprio cache
   if(u.origin!==location.origin&&r.url!==DOCX)return;
   // páginas e dados: tenta a internet primeiro (pega a versão nova do GitHub), se não tiver usa a cópia salva
   if(r.mode==='navigate'||u.pathname.endsWith('.json')){const nav=r.mode==='navigate',key=nav?(/gestao/.test(u.pathname)?'/gestao.html':'/'):r;
