@@ -582,7 +582,7 @@ function card(a,semHora){const i=a.info,n=IDX[a.key];return`<div class="card ${i
 function diaBloco(d,inf){let h=`<div class="day ${d===TODAY?'today':''}"><div class="dh"><span>${fmtLong(d)}</span>${badge(inf)}</div>`;
   if(inf.tipo==='feriado'||inf.tipo==='recesso')h+=`<div class="off">Sem aula · ${esc(inf.nome)}</div>`;
   else if(inf.tipo==='fora')h+='<div class="off">Fora do ano letivo</div>';
-  else if(!inf.aulas.length)h+='<div class="off">Sem aulas suas neste dia</div>';
+  else if(!inf.aulas.length)h+='<div class="off"><b>PLANEJAMENTO PEDAGÓGICO</b></div>';
   else h+=(inf.tipo==='extra'?`<div class="hint">${esc(inf.nome)}</div>`:'')+inf.aulas.map(a=>card(a)).join('');
   return h+'</div>'}
 function vSemana(){
@@ -594,6 +594,7 @@ function vSemana(){
   dias.forEach(([d,inf],c)=>{g+=`<div class="gh ${d===TODAY?'today':''}" style="grid-column:${c+2}"><b>${DIAS[pd(d).getDay()]}</b><small>${fmt(d)}${d===TODAY?' · hoje':''}</small>${badge(inf)}</div>`});
   usados.forEach((s,r)=>{const row=r+2;g+=`<div class="gt" style="grid-row:${row}"><b>${s.ini}</b><small>${s.fim}</small></div>`;
     dias.forEach(([d,inf],c)=>{const sem=inf.tipo==='feriado'||inf.tipo==='recesso'||inf.tipo==='fora';if(sem){if(r===0)g+=`<div class="goff" style="grid-column:${c+2};grid-row:2 / span ${usados.length}">${inf.tipo==='fora'?'Fora do ano letivo':'Sem aula<br><b>'+esc(inf.nome)+'</b>'}</div>`;return}
+      if(!inf.aulas.length){if(r===0)g+=`<div class="goff" style="grid-column:${c+2};grid-row:2 / span ${usados.length}"><b>PLANEJAMENTO PEDAGÓGICO</b></div>`;return}
       const a=inf.aulas.find(x=>x.slot.id===s.id);g+=`<div class="gc" style="grid-column:${c+2};grid-row:${row}">${a?card(a,1):'<div class="gv"></div>'}</div>`})});
   if(!usados.length)g+=`<div class="off" style="grid-column:1 / -1">Nenhuma aula nesta semana.</div>`;
   return h+g+'</div>'}
