@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function gestor(cod) {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/gestao/$(cod))
+        && request.auth.token.email in get(/databases/$(database)/documents/gestao/$(cod)).data.admins;
+    }
+
+    // quem é da gestão de cada escola
+    match /gestao/{cod} {
+      allow read: if request.auth != null && request.auth.token.email in resource.data.admins;
+      allow create: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.admins == [request.auth.token.email]
+        && !exists(/databases/$(database)/documents/escolas/$(cod));
+      allow update: if gestor(cod) && request.resource.data.admins.size() > 0;
+      allow delete: if false;
+    }
+
+    // horário da escola: professor lê com o código, só a gestão altera
+    match /escolas/{cod} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create, update: if gestor(cod);
+      allow delete: if false;
+
+      // feito/pendente dos planos: cada aparelho escreve o seu, a gestão lê todos
+      match /status/{uid} {
+        allow read: if request.auth != null && (request.auth.uid == uid || gestor(cod));
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

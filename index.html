@@ -101,6 +101,7 @@ nav.tb button.on{color:var(--g);font-weight:700}
 .opt.on{border-color:var(--g);background:#eef7f0}.opt input{width:auto;margin-top:3px}
 .opt span{display:flex;flex-direction:column}
 .passos{margin:6px 0 12px;padding-left:20px;line-height:1.5;font-size:15px}.passos li{margin-bottom:6px}.opt small{color:var(--mu);font-size:13px}
+button.opt{background:var(--sf);color:var(--tx);font:inherit}button.opt:hover{border-color:var(--g)}
 .as.vazio{color:var(--g);font-weight:600;font-size:13px}
 .mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
 .mh{text-align:center;font-size:12px;font-weight:700;color:var(--mu)}
@@ -289,7 +290,7 @@ let ART=null; let pubTimer=null;
 const DL={save:async({filename,data})=>{const b=data instanceof Blob?data:new Blob([data],{type:'application/octet-stream'});const u=URL.createObjectURL(b);const l=document.createElement('a');l.href=u;l.download=filename;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);return{status:'saved'}}};
 
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function salvar(publicar){saveLocal();if(publicar)agendarPub()}
+function salvar(publicar){saveLocal();if(publicar)agendarPub();if(S.escola)agendarStatus()}
 function agendarPub(){clearTimeout(pubTimer);pubTimer=setTimeout(publicar,1200)}
 async function publicar(){
   if(!ART)return;
@@ -348,7 +349,7 @@ function next(){if(step===3)gmode=null,gq=0;const e=STEPS[step][2]();if(e){docum
 function prev(){step--;render();window.scrollTo(0,0)}
 function sairWizard(){S=carregar();migrar();modo='app';render()}
 
-function stProf(){return`<p class="hint">Essas informações aparecem no topo do seu horário.</p>
+function stProf(){return`${ESCOLA&&!S.escola?boxEscola():''}<p class="hint">Essas informações aparecem no topo do seu horário.</p>
 <label class="f">Seu nome</label><input value="${esc(S.prof.nome)}" oninput="S.prof.nome=this.value" placeholder="Inserir nome do professor">
 <label class="f">Escola</label><input value="${esc(S.prof.escola)}" oninput="S.prof.escola=this.value" placeholder="Inserir nome completo da escola">
 <label class="f">Disciplinas que você leciona</label>
@@ -472,6 +473,62 @@ function aplicarImport(){if(!impH)return;const{slots,grade,turmas,discs}=impH;
   impH=null;salvar(true);fechar();
   if(modo==='wizard'){step=4;gmode='resumo';gradeDay=1;render();window.scrollTo(0,0);toast('Horário importado. Confira a semana.')}
   else{indexar();render();toast('Horário importado')}}
+/* ---------- escola (código da gestão) ---------- */
+const ESCOLA=!window.claude;
+const FBC={apiKey:"AIzaSyDBTSaowkupUIhuIh4QCVT3Y5ijutzSzWY",authDomain:"organizador-de-aulas-a23f1.firebaseapp.com",projectId:"organizador-de-aulas-a23f1",storageBucket:"organizador-de-aulas-a23f1.firebasestorage.app",messagingSenderId:"947687188824",appId:"1:947687188824:web:8908106fdfce85500e5d2d"};
+function carregarJS(src){return new Promise((ok,er)=>{if(document.querySelector('script[src="'+src+'"]'))return ok();const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=er;document.head.appendChild(s)})}
+let fbP=null;
+function fbDB(){if(!fbP){fbP=(async()=>{const b='https://www.gstatic.com/firebasejs/10.12.2/';for(const f of['firebase-app-compat.js','firebase-auth-compat.js','firebase-firestore-compat.js'])await carregarJS(b+f);if(!firebase.apps.length)firebase.initializeApp(FBC);const a=firebase.auth();await new Promise(r=>{const u=a.onAuthStateChanged(()=>{u();r()})});if(!a.currentUser)await a.signInAnonymously();return firebase.firestore()})();fbP.catch(()=>{fbP=null})}return fbP}
+const codNorm=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+let escPend=null;
+async function buscarEscola(cod){const db=await fbDB();const d=await db.collection('escolas').doc(cod).get();return d.exists?d.data():null}
+function boxEscola(){return`<div class="box"><b><i class="i i-escola"></i> Sua escola tem código?</b><p class="hint" style="margin:4px 0 10px">Se a gestão da sua escola já cadastrou o horário, digite o código e o app monta tudo para você.</p><button class="btn sec" onclick="telaCodigo()">Usar código da escola</button></div>`}
+function telaCodigo(msg){abrirSheet(`<h2>Código da escola</h2><p class="hint">Peça o código para a gestão pedagógica da sua escola.</p>
+<input id="codesc" placeholder="Ex.: K7P2QX" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px;font-weight:700" onkeydown="if(event.key==='Enter')entrarEscola()">
+${msg?`<p class="err" style="margin-top:8px">${msg}</p>`:''}
+<button class="btn" style="width:100%;margin-top:12px" id="bcod" onclick="entrarEscola()">Continuar</button>`);setTimeout(()=>{const i=document.getElementById('codesc');if(i)i.focus()},250)}
+async function entrarEscola(){const cod=codNorm(document.getElementById('codesc').value);if(cod.length<4)return telaCodigo('Digite o código completo.');
+  const b=document.getElementById('bcod');b.disabled=true;b.textContent='Procurando…';
+  let E;try{E=await buscarEscola(cod)}catch(e){return telaCodigo(navigator.onLine?'Não consegui falar com o servidor. Tente de novo.':'Sem internet. Conecte e tente de novo.')}
+  if(!E)return telaCodigo('Não achei nenhuma escola com o código <b>'+esc(cod)+'</b>. Confira com a gestão.');
+  if(!(E.profs||[]).length)return telaCodigo('A gestão de <b>'+esc(E.nome)+'</b> ainda não importou o horário. Tente mais tarde.');
+  escPend={cod,E};const P=[...E.profs].sort((a,b)=>a.nome.localeCompare(b.nome));
+  abrirSheet(`<h2>${esc(E.nome)}</h2><p class="hint">Qual destes é você?</p><div class="cfg" style="gap:6px">${P.map(p=>{const n=(E.aulas||[]).filter(a=>a.p===p.id).length;return`<button class="opt" style="text-align:left;width:100%;cursor:pointer" onclick="previaEscola('${p.id}')"><span><b>${esc(p.nome)}</b><small>${n} aula(s) por semana</small></span></button>`}).join('')}</div>`)}
+function montarDaEscola(E,pid){const A=(E.aulas||[]).filter(a=>a.p===pid);
+  const slots=(E.slots||[]).map(s=>({ini:s.ini,fim:s.fim})).sort((a,b)=>a.ini<b.ini?-1:1);
+  slots.forEach((s,i)=>{const ant=S.slots.find(x=>x.ini===s.ini);s.id=ant&&!slots.some(y=>y.id===ant.id)?ant.id:'s'+Date.now().toString(36)+i;s.label=(i+1)+'º horário'});
+  const grade={1:{},2:{},3:{},4:{},5:{}},turmas=[],discs=[];
+  A.forEach(a=>{const s=slots.find(x=>x.ini===a.i);if(!s||!grade[a.d])return;grade[a.d][s.id]={turma:a.t,comp:a.c};if(!turmas.includes(a.t))turmas.push(a.t);if(a.c&&!discs.includes(a.c))discs.push(a.c)});
+  return{slots,grade,turmas,discs,n:A.length}}
+function previaEscola(pid){if(!escPend)return;const{E}=escPend;const p=E.profs.find(x=>x.id===pid);const M=montarDaEscola(E,pid);escPend.pid=pid;
+  abrirSheet(`<h2>Conferir horário</h2><div class="box"><b>${esc(p.nome)}</b> · ${esc(E.nome)}<br><span class="hint">${M.n} aulas por semana${E.ano&&E.ano.ini?' · ano letivo '+fmtA(E.ano.ini)+' a '+fmtA(E.ano.fim):''}</span></div>
+<div style="overflow-x:auto"><table><tr><th>Horário</th>${[1,2,3,4,5].map(d=>`<th>${DC[d]}</th>`).join('')}</tr>${M.slots.filter(s=>[1,2,3,4,5].some(d=>M.grade[d][s.id])).map(s=>`<tr><td><b>${s.ini}</b></td>${[1,2,3,4,5].map(d=>{const a=M.grade[d][s.id];return`<td>${a?`<span class="chip" style="--c:${cor(a.turma)};font-size:11px;padding:2px 7px">${esc(a.turma)}</span><br><small>${esc(a.comp)}</small>`:''}</td>`}).join('')}</tr>`).join('')}</table></div>
+${S.setupDone||porSemana()?'<p class="hint">Isso substitui sua semana de aulas pelo horário da escola. Assuntos e planos já salvos continuam nos horários que não mudaram.</p>':''}
+<button class="btn" style="width:100%;margin-top:8px" onclick="aplicarEscola()">Usar o horário da escola</button>
+<button class="link" style="width:100%" onclick="entrarEscola2()">Não sou eu</button>`)}
+function entrarEscola2(){const {cod}=escPend;telaCodigo();setTimeout(()=>{document.getElementById('codesc').value=cod;entrarEscola()},50)}
+function aplicarDados(E,pid){const M=montarDaEscola(E,pid);const p=(E.profs||[]).find(x=>x.id===pid);
+  S.slots=M.slots;S.grade=M.grade;M.turmas.forEach(t=>{if(!S.turmas.includes(t))S.turmas.push(t)});M.discs.forEach(d=>{if(!S.prof.discs.includes(d))S.prof.discs.push(d)});S.prof.disc=S.prof.discs[0]||'';
+  if(!S.prof.nome&&p)S.prof.nome=p.nome;S.prof.escola=E.nome||S.prof.escola;
+  if(E.ano&&E.ano.ini&&E.ano.fim)S.ano={ini:E.ano.ini,fim:E.ano.fim};
+  S.feriados=S.feriados.filter(f=>!f.escola).concat((E.feriados||[]).filter(f=>!S.feriados.some(x=>!x.escola&&x.data===f.data)).map(f=>({data:f.data,nome:f.nome||'Feriado',auto:false,ativo:true,escola:true})));
+  S.recessos=S.recessos.filter(r=>!r.escola).concat((E.recessos||[]).map(r=>({ini:r.ini,fim:r.fim,nome:r.nome||'Recesso',escola:true})));
+  syncFeriados();S.escola={cod:escPend?escPend.cod:S.escola.cod,prof:pid,ver:E.ver||0,nome:E.nome}}
+function aplicarEscola(){if(!escPend||!escPend.pid)return;aplicarDados(escPend.E,escPend.pid);escPend=null;salvar(true);fechar();enviarStatus();
+  if(modo==='wizard'){step=STEPS.length-1;render();window.scrollTo(0,0)}else{indexar();render()}toast('Horário da escola carregado')}
+async function atualizarEscola(manual){if(!ESCOLA||!S.escola||!S.setupDone)return;try{const E=await buscarEscola(S.escola.cod);
+  if(!E){if(manual)toast('A escola não foi encontrada');return}
+  if(!(E.profs||[]).some(p=>p.id===S.escola.prof)){if(manual)toast('Seu nome não está mais no horário da escola');return}
+  if((E.ver||0)!==S.escola.ver){aplicarDados(E,S.escola.prof);salvar(true);indexar();render();toast('Horário atualizado pela escola')}else if(manual)toast('Seu horário já está em dia')
+  enviarStatus()}catch(e){if(manual)toast('Sem conexão com o servidor')}}
+let stT=null;
+function agendarStatus(){if(!ESCOLA||!S.escola)return;clearTimeout(stT);stT=setTimeout(enviarStatus,3000)}
+async function enviarStatus(){if(!ESCOLA||!S.escola)return;try{const db=await fbDB();const uid=firebase.auth().currentUser.uid;
+  const ini={};S.slots.forEach(s=>ini[s.id]=s.ini);const planos=Object.keys(S.aulas).filter(k=>S.aulas[k]&&S.aulas[k].plano).map(k=>{const[d,s]=k.split('|');return ini[s]?d+'|'+ini[s]:null}).filter(Boolean);
+  await db.collection('escolas').doc(S.escola.cod).collection('status').doc(uid).set({prof:S.escola.prof,nome:S.prof.nome||'',planos,em:Date.now()})}catch(e){}}
+function sairEscola(){abrirSheet(`<h2>Desvincular da escola?</h2><p>Seu horário continua no app, mas não recebe mais as mudanças da gestão e a gestão deixa de ver seus planos pendentes.</p><div class="wnav"><button class="btn sec" onclick="fechar()">Cancelar</button><button class="btn red" onclick="S.escola=null;salvar(true);fechar();render()">Desvincular</button></div>`)}
+function secEscola(){if(!ESCOLA)return'';if(!S.escola)return`<div class="cfg"><h3><i class="i i-escola"></i> Código da escola</h3><p class="hint">Se a gestão da sua escola cadastrou o horário no Organizador, digite o código e seu horário chega pronto.</p><button class="btn" onclick="telaCodigo()">Digitar código da escola</button></div>`;
+  return`<div class="cfg"><h3><i class="i i-escola"></i> ${esc(S.escola.nome||'Escola')}</h3><p class="hint">Código <b>${esc(S.escola.cod)}</b>. Seu horário vem da gestão e é atualizado sozinho quando abre o app com internet. A gestão vê só se o plano de cada aula está feito ou pendente.</p><button class="btn sec" onclick="atualizarEscola(true)"><i class="i i-down"></i> Atualizar horário agora</button><button class="link" style="color:var(--red)" onclick="sairEscola()">Desvincular da escola</button></div>`}
 function stFer(){
   return`<p class="hint">Nos dias marcados não haverá aula. Desmarque os que sua escola não segue.</p>
 <div class="box">${S.feriados.map((f,i)=>{const w=pd(f.data).getDay();const fds=w===0||w===6;return`<div class="fer ${fds?'wk':''}"><input type="checkbox" ${f.ativo?'checked':''} onchange="S.feriados[${i}].ativo=this.checked;salvar()"><span class="d">${fmt(f.data)} ${DC[w]}</span><span class="n">${esc(f.nome)}${fds?' <span class="tag">fim de semana</span>':''}</span>${f.auto?'':`<button class="x" onclick="S.feriados.splice(${i},1);render()">×</button>`}</div>`}).join('')||'<span class="hint">Nenhum.</span>'}</div>
@@ -572,7 +629,7 @@ ${DL?'<button class="btn" onclick="baixarCSV()"><i class="i i-down"></i> Baixar 
 </div>`}
 function vConfig(){
   return`<h2>Configurações</h2>
-${secInstalar()}<div class="cfg"><h3>Aparência</h3><label class="opt ${temaAtual()==='claro'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='claro'?'checked':''} onchange="setTema('claro')"><span><b><i class="i i-sol"></i> Modo dia</b><small>Fundo claro.</small></span></label><label class="opt ${temaAtual()==='escuro'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='escuro'?'checked':''} onchange="setTema('escuro')"><span><b><i class="i i-lua"></i> Modo noite</b><small>Fundo escuro, mais confortável à noite.</small></span></label><label class="opt ${temaAtual()==='auto'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='auto'?'checked':''} onchange="setTema('auto')"><span><b><i class="i i-auto"></i> Automático</b><small>Segue o modo claro ou escuro do aparelho.</small></span></label></div>
+${secInstalar()}${secEscola()}<div class="cfg"><h3>Aparência</h3><label class="opt ${temaAtual()==='claro'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='claro'?'checked':''} onchange="setTema('claro')"><span><b><i class="i i-sol"></i> Modo dia</b><small>Fundo claro.</small></span></label><label class="opt ${temaAtual()==='escuro'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='escuro'?'checked':''} onchange="setTema('escuro')"><span><b><i class="i i-lua"></i> Modo noite</b><small>Fundo escuro, mais confortável à noite.</small></span></label><label class="opt ${temaAtual()==='auto'?'on':''}"><input type="radio" name="tema" ${temaAtual()==='auto'?'checked':''} onchange="setTema('auto')"><span><b><i class="i i-auto"></i> Automático</b><small>Segue o modo claro ou escuro do aparelho.</small></span></label></div>
 <div class="cfg"><h3><i class="i i-escola"></i> Turmas, horários e feriados</h3><p class="hint">${esc(S.turmas.join(', '))} · ${porSemana()} aulas por semana · ${fmtA(S.ano.ini)} a ${fmtA(S.ano.fim)}</p>
 <button class="btn" onclick="modo='wizard';step=0;render()"><i class="i i-lapis"></i> Editar turmas, grade e feriados</button>
 <button class="btn sec" onclick="telaImportar()"><i class="i i-up"></i> Importar horário de planilha</button></div>
@@ -841,6 +898,7 @@ function secInstalar(){if(!PWA)return'';
   return'<div class="cfg"><h3><i class="i i-down"></i> Instalar o app</h3>'+c+'</div>\n'}
 function render(){aplicarTema();if(modo==='wizard'){document.getElementById('tb').style.display='none';document.body.classList.remove('temnav');renderWizard()}else renderApp()}
 render();
+if(ESCOLA&&S.escola)setTimeout(()=>atualizarEscola(false),1500);
 </script>
 <script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));</script>
 </body>
