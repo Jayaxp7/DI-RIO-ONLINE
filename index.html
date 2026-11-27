@@ -138,7 +138,7 @@ body.travado{overflow:hidden}
 .pv .b{border:1.5px solid #000;padding:6px 8px;font-size:13px;cursor:pointer;min-height:34px;white-space:pre-wrap;word-break:break-word}
 .pv .b:hover{background:#f3faf5}
 .pv .b b{display:block}
-.pv .b.i b{display:inline}
+.pv .b.inl b{display:inline}
 .pv .b.vz{color:#b07d00}
 input,select,textarea{font-size:16px}
 nav.tb{padding-bottom:env(safe-area-inset-bottom)}
@@ -842,7 +842,7 @@ function pGuarda(){const f=document.getElementById('pq');if(f&&pq>=0)P[PC[pq][0]
 function pNav(n){pGuarda();if(pq===0&&n<0){fechar();return abrir(pkey)}pq+=n;if(pq>=PC.length)return verificar();planoTela()}
 function verificar(){
   pq=-1;
-  const PF=pFinal();const bx=(k,l,inl)=>{const i=PC.findIndex(c=>c[0]===k),v=PF[k]||'';return`<div class="b ${inl?'i':''} ${v.trim()?'':'vz'}" onclick="pq=${i};planoTela()"><b>${l}</b> ${v.trim()?esc(v):'(vazio — toque para preencher)'}</div>`};
+  const PF=pFinal();const bx=(k,l,inl)=>{const i=PC.findIndex(c=>c[0]===k),v=PF[k]||'';return`<div class="b ${inl?'inl':''} ${v.trim()?'':'vz'}" onclick="pq=${i};planoTela()"><b>${l}</b> ${v.trim()?esc(v):'(vazio — toque para preencher)'}</div>`};
   abrirSheet(`<h2>Verificar plano</h2><p class="hint">Confira tudo. Toque em qualquer campo para corrigir.</p>
 <div class="pv"><h1>PLANO DE AULA</h1>
 <div class="pr" style="grid-template-columns:1fr 1fr 1fr">${bx('serie','Série:',1)}${bx('disciplina','Disciplina:',1)}${bx('data','Data:',1)}</div>
